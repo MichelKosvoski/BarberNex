@@ -1,0 +1,22 @@
+/* ================= RESET TOTAL ================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  background-color: #000;
+  overflow-x: hidden; /* só trava horizontal */
+  overflow-y: auto; /* libera rolagem vertical */
+}
+
+/* Opcional - scroll suave */
+html {
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,188 @@
+/* ===================== */
+/* PÁGINA BARBEARIA */
+/* ===================== */
+
+.barbearia-page {
+  padding: 60px 40px;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* ===================== */
+/* HERO */
+/* ===================== */
+
+.barbearia-hero {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.barbearia-hero h1 {
+  font-size: 38px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.barbearia-hero p {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-bottom: 25px;
+}
+
+.btn-agendar {
+  background: linear-gradient(90deg, #ffd700, #ffb400);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-agendar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+}
+
+/* ===================== */
+/* SEÇÕES */
+/* ===================== */
+
+.barbearia-servicos,
+.barbearia-barbeiros {
+  margin-bottom: 70px;
+}
+
+.barbearia-servicos h2,
+.barbearia-barbeiros h2 {
+  font-size: 24px;
+  margin-bottom: 30px;
+  color: #ffd700;
+}
+
+/* ===================== */
+/* GRID */
+/* ===================== */
+
+.servicos-grid,
+.barbeiros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 25px;
+}
+
+/* ===================== */
+/* CARD SERVIÇO */
+/* ===================== */
+
+.service-card {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: 0.35s;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.service-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.service-card h3 {
+  padding: 15px 15px 5px;
+  font-size: 18px;
+}
+
+.service-card p {
+  padding: 0 15px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.service-card button {
+  margin: 15px;
+  width: calc(100% - 30px);
+  background: linear-gradient(90deg, #ffd700, #ffb400);
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.service-card button:hover {
+  transform: scale(1.03);
+}
+
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ===================== */
+/* CARD BARBEIRO */
+/* ===================== */
+
+.barber-card {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: 0.35s;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: center;
+  padding-bottom: 15px;
+  backdrop-filter: blur(8px);
+}
+
+.barber-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.barber-card h3 {
+  margin-top: 15px;
+  font-size: 18px;
+}
+
+.barber-card p {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 15px;
+}
+
+.barber-card button {
+  background: linear-gradient(90deg, #ffd700, #ffb400);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.barber-card button:hover {
+  transform: scale(1.05);
+}
+
+.barber-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ===================== */
+/* RESPONSIVO */
+/* ===================== */
+
+@media (max-width: 768px) {
+  .barbearia-page {
+    padding: 40px 20px;
+  }
+
+  .barbearia-hero h1 {
+    font-size: 28px;
+  }
+}

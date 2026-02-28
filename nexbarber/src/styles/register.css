@@ -1,0 +1,17 @@
+/* Texto explicativo da barbearia */
+.register-info {
+  color: #aaa;
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Botão WhatsApp opcional mais forte */
+.whatsapp-btn {
+  background: #25d366;
+  color: #000;
+}
+
+.whatsapp-btn:hover {
+  background: #1ebe5d;
+}
