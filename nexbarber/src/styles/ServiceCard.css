@@ -1,6 +1,93 @@
 .service-card {
-  background: #111;
-  padding: 20px;
-  border-radius: 12px;
+  background: #0f172a;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 280px; /* controla largura */
+}
+
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(250, 204, 21, 0.2);
+}
+
+/* ===== IMAGEM ===== */
+
+.service-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5; /* proporção vertical bonita */
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+}
+
+.service-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%; /* sobe o foco pro rosto + corte */
+  display: block;
+}
+.service-card:hover img {
+  transform: scale(1.05);
+}
+
+/* ===== BADGE ===== */
+
+.service-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #facc15;
+  color: black;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 30px;
+  font-weight: 600;
+}
+
+/* ===== CORPO ===== */
+
+.service-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-body h3 {
+  font-size: 18px;
   color: white;
+}
+
+.service-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.price {
+  color: #facc15;
+  font-weight: bold;
+}
+
+/* ===== BOTÃO ===== */
+
+.service-button {
+  margin-top: 8px;
+  background: #facc15;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.service-button:hover {
+  background: #eab308;
 }

@@ -1,188 +1,337 @@
-/* ===================== */
-/* PÁGINA BARBEARIA */
-/* ===================== */
+:root {
+  --bg: #050607;
+  --panel: rgba(10, 12, 14, 0.72);
+  --panel2: rgba(16, 18, 22, 0.8);
+  --stroke: rgba(255, 255, 255, 0.08);
+  --text: #f3f4f6;
+  --muted: rgba(255, 255, 255, 0.7);
+  --gold: #f5c542;
+  --gold2: #d7a52b;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
 
 .barbearia-page {
-  padding: 60px 40px;
-  color: #fff;
   min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
 }
 
-/* ===================== */
-/* HERO */
-/* ===================== */
-
-.barbearia-hero {
-  text-align: center;
-  margin-bottom: 60px;
+/* ================= HERO ================= */
+.bb-hero {
+  position: relative;
+  height: 360px;
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid var(--stroke);
 }
 
-.barbearia-hero h1 {
-  font-size: 38px;
-  font-weight: 800;
-  margin-bottom: 10px;
+.bb-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(0, 0, 0, 0.25),
+      rgba(0, 0, 0, 0.85)
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.9));
 }
 
-.barbearia-hero p {
+.bb-hero-content {
+  position: relative;
+  height: 100%;
+  padding: 28px 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.bb-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.bb-logoBox {
+  width: 86px;
+  height: 86px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(245, 197, 66, 0.22);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bb-logoBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bb-logoFake {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: rgba(245, 197, 66, 0.15);
+  border: 1px solid rgba(245, 197, 66, 0.25);
+}
+
+.bb-title {
+  margin: 0;
+  font-size: 42px;
+  letter-spacing: 0.4px;
+}
+
+.bb-meta {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bb-stars {
+  color: var(--gold);
+  letter-spacing: 2px;
   font-size: 16px;
-  opacity: 0.8;
-  margin-bottom: 25px;
 }
 
-.btn-agendar {
-  background: linear-gradient(90deg, #ffd700, #ffb400);
+.bb-badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid var(--stroke);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.bb-badge.open {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.bb-badge.closed {
+  border-color: rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.bb-cta {
+  margin-top: 24px;
+  background: var(--gold);
   border: none;
-  padding: 12px 28px;
+  color: #151515;
+  font-weight: 800;
+  padding: 14px 18px;
   border-radius: 12px;
-  font-weight: 700;
+  box-shadow: 0 12px 26px rgba(245, 197, 66, 0.18);
   cursor: pointer;
-  transition: 0.3s;
+}
+.bb-cta:hover {
+  filter: brightness(1.03);
 }
 
-.btn-agendar:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+/* ================= TABS ================= */
+.bb-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.78);
+  border-bottom: 1px solid var(--stroke);
+  backdrop-filter: blur(10px);
 }
 
-/* ===================== */
-/* SEÇÕES */
-/* ===================== */
-
-.barbearia-servicos,
-.barbearia-barbeiros {
-  margin-bottom: 70px;
+.bb-tab {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 800;
+  font-size: 18px;
+  padding: 10px 2px;
+  cursor: pointer;
+  position: relative;
 }
 
-.barbearia-servicos h2,
-.barbearia-barbeiros h2 {
-  font-size: 24px;
-  margin-bottom: 30px;
-  color: #ffd700;
+.bb-tab.active {
+  color: var(--gold);
 }
 
-/* ===================== */
-/* GRID */
-/* ===================== */
+.bb-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--gold);
+}
 
-.servicos-grid,
-.barbeiros-grid {
+/* ================= SECTIONS ================= */
+.bb-section {
+  padding: 26px 28px;
+}
+
+.bb-h2 {
+  margin: 0 0 16px 0;
+  color: var(--gold);
+  font-size: 26px;
+}
+
+.bb-empty {
+  color: var(--muted);
+}
+
+/* ================= AGENDAMENTO GRID ================= */
+.bb-grid2 {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 25px;
+  grid-template-columns: 340px 1fr;
+  gap: 18px;
 }
 
-/* ===================== */
-/* CARD SERVIÇO */
-/* ===================== */
-
-.service-card {
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 18px;
-  overflow: hidden;
-  transition: 0.35s;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-}
-
-.service-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-}
-
-.service-card h3 {
-  padding: 15px 15px 5px;
-  font-size: 18px;
-}
-
-.service-card p {
-  padding: 0 15px;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-.service-card button {
-  margin: 15px;
-  width: calc(100% - 30px);
-  background: linear-gradient(90deg, #ffd700, #ffb400);
-  border: none;
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.service-card button:hover {
-  transform: scale(1.03);
-}
-
-.service-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* ===================== */
-/* CARD BARBEIRO */
-/* ===================== */
-
-.barber-card {
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 18px;
-  overflow: hidden;
-  transition: 0.35s;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  text-align: center;
-  padding-bottom: 15px;
-  backdrop-filter: blur(8px);
-}
-
-.barber-card img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-}
-
-.barber-card h3 {
-  margin-top: 15px;
-  font-size: 18px;
-}
-
-.barber-card p {
-  font-size: 14px;
-  opacity: 0.8;
-  margin-bottom: 15px;
-}
-
-.barber-card button {
-  background: linear-gradient(90deg, #ffd700, #ffb400);
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.barber-card button:hover {
-  transform: scale(1.05);
-}
-
-.barber-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* ===================== */
-/* RESPONSIVO */
-/* ===================== */
-
-@media (max-width: 768px) {
-  .barbearia-page {
-    padding: 40px 20px;
+@media (max-width: 900px) {
+  .bb-grid2 {
+    grid-template-columns: 1fr;
   }
-
-  .barbearia-hero h1 {
-    font-size: 28px;
+  .bb-title {
+    font-size: 30px;
   }
+  .bb-hero {
+    height: 320px;
+  }
+}
+
+/* left info card */
+.bb-infoCard {
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.bb-infoLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px;
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.bb-infoLine:last-child {
+  border-bottom: none;
+}
+
+.bb-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  background: rgba(245, 197, 66, 0.9);
+  box-shadow: 0 0 0 4px rgba(245, 197, 66, 0.12);
+}
+
+/* right schedule card */
+.bb-scheduleCard {
+  background: var(--panel2);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.bb-days {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.bb-day {
+  width: 86px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+.bb-day.active {
+  border-color: rgba(245, 197, 66, 0.4);
+  box-shadow: 0 8px 18px rgba(245, 197, 66, 0.12);
+  color: var(--gold);
+}
+
+.bb-dayLabel {
+  display: block;
+  font-weight: 800;
+  font-size: 12px;
+  opacity: 0.9;
+}
+.bb-dayNum {
+  display: block;
+  font-weight: 900;
+  font-size: 18px;
+  margin-top: 4px;
+}
+
+.bb-times {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(92px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .bb-times {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.bb-time {
+  padding: 12px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.bb-time.active {
+  background: rgba(245, 197, 66, 0.16);
+  border-color: rgba(245, 197, 66, 0.4);
+  color: var(--gold);
+}
+
+.bb-continueRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.bb-continue {
+  background: var(--gold);
+  border: none;
+  color: #151515;
+  font-weight: 900;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* ================= CARDS GRID (serviços / barbeiros) ================= */
+.bb-cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 280px); /* mesmo tamanho do card */
+  justify-content: center; /* centraliza */
+  gap: 20px;
 }
