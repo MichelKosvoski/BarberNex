@@ -1,35 +1,55 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { getBarbearia, getBarbeiros, getServicos } from "../../services/api";
 
-import "../../styles/barbearia.css";
 import ServiceCard from "../../components/ServiceCard";
 import BarberCard from "../../components/BarberCard";
-import { barbeariaExemplo } from "../../data/mockBarbearia";
+import "../../styles/barbearia.css";
 
 export default function ModeloBarbearia() {
   const { id } = useParams();
-
-  const data = barbeariaExemplo;
-
-  const estaAberto = data?.aberto ?? data?.aberta ?? false;
 
   const [tab, setTab] = useState("agendamento");
   const [diaSelecionado, setDiaSelecionado] = useState(0);
   const [horaSelecionada, setHoraSelecionada] = useState("");
   const [busca, setBusca] = useState("");
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
-  const [ordenacao, setOrdenacao] = useState("az");
+  const [servicoSelecionado, setServicoSelecionado] = useState(null);
+  const [barbeiroSelecionado, setBarbeiroSelecionado] = useState(null);
+  const [buscaBarbeiro, setBuscaBarbeiro] = useState("");
+  const [filtroEstrelas, setFiltroEstrelas] = useState(0);
 
-  // ===============================
-  // 🔥 GERA 60 DIAS A PARTIR DE HOJE
-  // ===============================
+  const [barbearia, setBarbearia] = useState(null);
+  const [barbeiros, setBarbeiros] = useState([]);
+  const [servicos, setServicos] = useState([]);
+
+  useEffect(() => {
+    async function carregar() {
+      try {
+        const barbeariaData = await getBarbearia(id);
+        const barbeirosData = await getBarbeiros(id);
+        const servicosData = await getServicos(id);
+
+        setBarbearia(barbeariaData);
+        setBarbeiros(Array.isArray(barbeirosData) ? barbeirosData : []);
+        setServicos(Array.isArray(servicosData) ? servicosData : []);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      }
+    }
+
+    carregar();
+  }, [id]);
+
+  const estaAberto = barbearia?.aberto ?? barbearia?.aberta ?? false;
+
   const dias = useMemo(() => {
     const hoje = new Date();
     const lista = [];
     const semana = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
-    for (let i = 0; i < 60; i++) {
-      const novaData = new Date();
+    for (let i = 0; i < 60; i += 1) {
+      const novaData = new Date(hoje);
       novaData.setDate(hoje.getDate() + i);
 
       lista.push({
@@ -44,9 +64,6 @@ export default function ModeloBarbearia() {
     return lista;
   }, []);
 
-  // ===============================
-  // 🔥 HORÁRIOS FIXOS
-  // ===============================
   const horarios = [
     "09:00",
     "09:30",
@@ -60,107 +77,121 @@ export default function ModeloBarbearia() {
     "16:00",
   ];
 
-  // ===============================
-  // 🔥 BLOQUEIA HORÁRIOS PASSADOS SE FOR HOJE
-  // ===============================
   const horarioEstaDisponivel = (hora) => {
     const hoje = new Date();
     const diaEscolhido = dias[diaSelecionado];
 
-    if (!diaEscolhido) return true;
+    if (!diaEscolhido) {
+      return true;
+    }
 
     const ehHoje =
       diaEscolhido.dia === hoje.getDate() &&
       diaEscolhido.mes === hoje.getMonth() &&
       diaEscolhido.ano === hoje.getFullYear();
 
-    if (!ehHoje) return true;
+    if (!ehHoje) {
+      return true;
+    }
 
     const [h, m] = hora.split(":");
     const horaComparar = new Date();
-    horaComparar.setHours(Number(h));
-    horaComparar.setMinutes(Number(m));
-    horaComparar.setSeconds(0);
+    horaComparar.setHours(Number(h), Number(m), 0, 0);
 
     return horaComparar > hoje;
   };
+
   const toggleCategoria = (categoria) => {
     setCategoriasSelecionadas((prev) =>
       prev.includes(categoria)
-        ? prev.filter((c) => c !== categoria)
+        ? prev.filter((item) => item !== categoria)
         : [...prev, categoria],
     );
   };
 
-  const categoriasDisponiveis = [
-    ...new Set(data.servicos.flatMap((s) => s.categoria)),
-  ];
+  const categoriasDisponiveis = useMemo(
+    () =>
+      [
+        ...new Set(servicos.flatMap((servico) => servico.categoria || [])),
+      ].filter(Boolean),
+    [servicos],
+  );
 
   const servicosFiltrados = useMemo(() => {
-    if (!data?.servicos) return [];
+    let lista = [...servicos];
 
-    let lista = [...data.servicos];
-
-    if (busca.trim() !== "") {
-      lista = lista.filter((s) =>
-        s.nome.toLowerCase().includes(busca.toLowerCase()),
+    if (busca.trim()) {
+      lista = lista.filter((servico) =>
+        servico.nome?.toLowerCase().includes(busca.toLowerCase()),
       );
     }
 
     if (categoriasSelecionadas.length > 0) {
-      lista = lista.filter((s) =>
-        categoriasSelecionadas.some((cat) => s.categoria.includes(cat)),
+      lista = lista.filter((servico) =>
+        categoriasSelecionadas.some((categoria) =>
+          (servico.categoria || []).includes(categoria),
+        ),
       );
     }
 
-    if (ordenacao === "az") {
-      lista.sort((a, b) => a.nome.localeCompare(b.nome));
-    } else {
-      lista.sort((a, b) => b.nome.localeCompare(a.nome));
+    return lista;
+  }, [busca, categoriasSelecionadas, servicos]);
+
+  const barbeirosFiltrados = useMemo(() => {
+    let lista = [...barbeiros];
+
+    if (buscaBarbeiro.trim()) {
+      lista = lista.filter((barbeiro) =>
+        barbeiro.nome?.toLowerCase().includes(buscaBarbeiro.toLowerCase()),
+      );
+    }
+
+    if (filtroEstrelas > 0) {
+      lista = lista.filter(
+        (barbeiro) => Number(barbeiro.rating ?? 5) >= filtroEstrelas,
+      );
     }
 
     return lista;
-  }, [busca, categoriasSelecionadas, ordenacao, data]);
+  }, [barbeiros, buscaBarbeiro, filtroEstrelas]);
+
   const irPara = (alvoId) => {
     const el = document.getElementById(alvoId);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
-  if (!data) {
-    return (
-      <div style={{ color: "white", padding: "40px" }}>
-        Barbearia não encontrada (id: {id})
-      </div>
-    );
+  if (!barbearia) {
+    return <div>Carregando barbearia...</div>;
   }
 
   return (
     <div className="barbearia-page">
-      {/* ================= HERO ================= */}
       <section
         className="bb-hero"
-        style={{ backgroundImage: `url(${data?.banner || ""})` }}
+        style={{ backgroundImage: `url(${barbearia?.banner || ""})` }}
       >
         <div className="bb-hero-overlay" />
 
         <div className="bb-hero-content">
           <div className="bb-brand">
             <div className="bb-logoBox">
-              {data?.logo ? (
-                <img src={data.logo} alt="logo" />
+              {barbearia?.logo ? (
+                <img src={barbearia.logo} alt="logo" />
               ) : (
                 <div className="bb-logoFake" />
               )}
             </div>
 
             <div>
-              <h1 className="bb-title">{data?.nome}</h1>
+              <h1 className="bb-title">{barbearia?.nome}</h1>
 
               <div className="bb-meta">
                 <div className="bb-stars">★★★★★</div>
 
                 <span className={`bb-badge ${estaAberto ? "open" : "closed"}`}>
-                  {estaAberto ? "✓ Aberto agora" : "• Fechado"}
+                  {estaAberto ? "Aberto agora" : "Fechado"}
                 </span>
               </div>
             </div>
@@ -172,7 +203,6 @@ export default function ModeloBarbearia() {
         </div>
       </section>
 
-      {/* ================= TABS ================= */}
       <div className="bb-tabs">
         <button
           className={`bb-tab ${tab === "agendamento" ? "active" : ""}`}
@@ -194,56 +224,55 @@ export default function ModeloBarbearia() {
         </button>
       </div>
 
-      {/* ================= AGENDAMENTO ================= */}
       <section id="sec-agendamento" className="bb-section">
         <div className="bb-grid2">
-          {/* INFOS */}
           <div className="bb-infoCard">
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {data?.cidade} - {data?.uf}
+              <span className="bb-dot" /> {barbearia?.cidade} - {barbearia?.uf}
             </div>
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {data?.telefone}
+              <span className="bb-dot" /> {barbearia?.telefone}
             </div>
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {data?.horario}
+              <span className="bb-dot" /> {barbearia?.horario}
             </div>
           </div>
 
-          {/* CALENDÁRIO */}
           <div className="bb-scheduleCard">
-            {/* DIAS */}
             <div className="bb-days-scroll">
-              {dias.map((d, idx) => (
+              {dias.map((dia, idx) => (
                 <button
-                  key={idx}
+                  key={`${dia.ano}-${dia.mes}-${dia.dia}`}
                   className={`bb-day ${diaSelecionado === idx ? "active" : ""}`}
                   onClick={() => {
                     setDiaSelecionado(idx);
                     setHoraSelecionada("");
                   }}
                 >
-                  <span className="bb-dayLabel">{d.label}</span>
-                  <span className="bb-dayNum">{d.dia}</span>
+                  <span className="bb-dayLabel">{dia.label}</span>
+                  <span className="bb-dayNum">{dia.dia}</span>
                 </button>
               ))}
             </div>
 
-            {/* HORÁRIOS */}
             <div className="bb-times">
-              {horarios.map((h) => {
-                const disponivel = horarioEstaDisponivel(h);
+              {horarios.map((hora) => {
+                const disponivel = horarioEstaDisponivel(hora);
 
                 return (
                   <button
-                    key={h}
+                    key={hora}
                     disabled={!disponivel}
                     className={`bb-time ${
-                      horaSelecionada === h ? "active" : ""
+                      horaSelecionada === hora ? "active" : ""
                     } ${!disponivel ? "disabled" : ""}`}
-                    onClick={() => (disponivel ? setHoraSelecionada(h) : null)}
+                    onClick={() => {
+                      if (disponivel) {
+                        setHoraSelecionada(hora);
+                      }
+                    }}
                   >
-                    {h}
+                    {hora}
                   </button>
                 );
               })}
@@ -253,10 +282,12 @@ export default function ModeloBarbearia() {
               <button
                 className="bb-continue"
                 onClick={() => {
-                  if (!horaSelecionada) return alert("Selecione um horário 🙂");
+                  if (!horaSelecionada) {
+                    alert("Selecione um horário");
+                    return;
+                  }
 
                   const dia = dias[diaSelecionado];
-
                   alert(
                     `Agendamento: ${dia.dia}/${dia.mes + 1}/${dia.ano} às ${horaSelecionada}`,
                   );
@@ -269,37 +300,27 @@ export default function ModeloBarbearia() {
         </div>
       </section>
 
-      {/* ================= SERVIÇOS ================= */}
       <section className="bb-section">
         <h2 className="bb-h2">Serviços</h2>
 
-        {/* FILTROS AQUI */}
-        <div style={{ marginBottom: 20, display: "flex", gap: 15 }}>
+        <div className="bb-filtros">
           <input
             type="text"
-            placeholder="Pesquisar..."
+            placeholder="Buscar serviço..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            style={{ padding: 8 }}
+            className="bb-input-busca"
           />
 
-          <select
-            value={ordenacao}
-            onChange={(e) => setOrdenacao(e.target.value)}
-            style={{ padding: 8 }}
-          >
-            <option value="az">A → Z</option>
-            <option value="za">Z → A</option>
-          </select>
-          <div style={{ display: "flex", gap: 15 }}>
-            {categoriasDisponiveis.map((cat) => (
-              <label key={cat} style={{ color: "white" }}>
+          <div className="bb-categorias">
+            {categoriasDisponiveis.map((categoria) => (
+              <label key={categoria} className="bb-categoria-item">
                 <input
                   type="checkbox"
-                  checked={categoriasSelecionadas.includes(cat)}
-                  onChange={() => toggleCategoria(cat)}
-                />{" "}
-                {cat}
+                  checked={categoriasSelecionadas.includes(categoria)}
+                  onChange={() => toggleCategoria(categoria)}
+                />
+                <span>{categoria}</span>
               </label>
             ))}
           </div>
@@ -307,19 +328,129 @@ export default function ModeloBarbearia() {
 
         <div className="bb-cardsGrid">
           {servicosFiltrados.map((servico) => (
-            <ServiceCard key={servico.id} servico={servico} />
+            <ServiceCard
+              key={servico.id}
+              servico={servico}
+              selected={servicoSelecionado?.id === servico.id}
+              onSelect={() => setServicoSelecionado(servico)}
+            />
           ))}
         </div>
       </section>
 
-      {/* ================= BARBEIROS ================= */}
-      <section className="bb-section">
-        <h2 className="bb-h2">Escolha o Barbeiro</h2>
+      <section id="sec-barbeiros" className="bb-section">
+        <div className="bb-barbeiro-top">
+          <h3 className="bb-h3">Escolha seu Barbeiro</h3>
 
-        <div className="bb-cardsGrid">
-          {data?.barbeiros?.map((barbeiro) => (
-            <BarberCard key={barbeiro.id} barbeiro={barbeiro} />
-          ))}
+          <div className="bb-barbeiro-filtros">
+            <input
+              type="text"
+              placeholder="Buscar barbeiro..."
+              value={buscaBarbeiro}
+              onChange={(e) => setBuscaBarbeiro(e.target.value)}
+              className="bb-input-busca"
+            />
+
+            <select
+              value={filtroEstrelas}
+              onChange={(e) => setFiltroEstrelas(Number(e.target.value))}
+              className="bb-select-estrelas"
+            >
+              <option value={0}>Todas avaliações</option>
+              <option value={5}>★★★★★</option>
+              <option value={4}>★★★★+</option>
+              <option value={3}>★★★+</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="bb-barbeiros-layout">
+          <div className="bb-barbeiros-grid">
+            {barbeirosFiltrados.map((barbeiro) => (
+              <BarberCard
+                key={barbeiro.id}
+                barbeiro={barbeiro}
+                selected={barbeiroSelecionado?.id === barbeiro.id}
+                onSelect={() => setBarbeiroSelecionado(barbeiro)}
+              />
+            ))}
+          </div>
+
+          <div className="bb-resumo-lateral">
+            <h3 className="bb-resumo-titulo">Resumo do Agendamento</h3>
+
+            <div className="bb-resumo-item">
+              <span>Serviço</span>
+              <strong>
+                {servicoSelecionado
+                  ? servicoSelecionado.nome
+                  : "Não selecionado"}
+              </strong>
+            </div>
+
+            <div className="bb-resumo-item">
+              <span>Data</span>
+              <strong>
+                {horaSelecionada
+                  ? `${dias[diaSelecionado].dia}/${dias[diaSelecionado].mes + 1}`
+                  : "Não selecionado"}
+              </strong>
+            </div>
+
+            <div className="bb-resumo-item">
+              <span>Horário</span>
+              <strong>{horaSelecionada || "Não selecionado"}</strong>
+            </div>
+
+            <div className="bb-resumo-item">
+              <span>Barbeiro</span>
+              <strong>
+                {barbeiroSelecionado
+                  ? barbeiroSelecionado.nome
+                  : "Não selecionado"}
+              </strong>
+            </div>
+
+            <div className="bb-campo">
+              <label>Tipo de cliente</label>
+              <select className="bb-select">
+                <option>Adulto</option>
+                <option>Criança</option>
+              </select>
+            </div>
+
+            <div className="bb-campo">
+              <label>Forma de pagamento</label>
+              <select className="bb-select">
+                <option>Pix</option>
+                <option>Dinheiro</option>
+                <option>Cartão Débito</option>
+                <option>Cartão Crédito</option>
+              </select>
+            </div>
+
+            <div className="bb-campo">
+              <label>Observação</label>
+              <textarea
+                className="bb-textarea"
+                placeholder="Ex: Deixar mais baixo na lateral..."
+              />
+            </div>
+
+            <div className="bb-total">
+              <span>Total</span>
+              <strong>
+                {servicoSelecionado ? `R$ ${servicoSelecionado.preco}` : "R$ 0"}
+              </strong>
+            </div>
+
+            <button
+              className="bb-btn-confirmar"
+              disabled={!servicoSelecionado || !horaSelecionada}
+            >
+              Confirmar Agendamento
+            </button>
+          </div>
         </div>
       </section>
     </div>

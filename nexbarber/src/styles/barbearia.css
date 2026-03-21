@@ -329,9 +329,240 @@
 }
 
 /* ================= CARDS GRID (serviços / barbeiros) ================= */
+.bb-h2 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: #facc15;
+}
 .bb-cardsGrid {
   display: grid;
   grid-template-columns: repeat(6, 280px); /* mesmo tamanho do card */
   justify-content: center; /* centraliza */
   gap: 20px;
+}
+/* ================= FILTROS ================= */
+
+.bb-filtros {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 50px;
+}
+
+/* INPUT BONITO */
+.bb-input-busca {
+  width: 360px;
+  padding: 14px 20px;
+  border-radius: 40px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  color: white;
+  font-size: 14px;
+  transition: 0.3s ease;
+}
+
+.bb-input-busca:focus {
+  border-color: #facc15;
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+}
+
+.bb-input-busca::placeholder {
+  color: #64748b;
+}
+
+/* CATEGORIAS COMO BOTÃO PILL */
+.bb-categorias {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.bb-categoria-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 30px;
+  border: 1px solid #1e293b;
+  background: #0b1220;
+  cursor: pointer;
+  transition: 0.25s ease;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.bb-categoria-item input {
+  display: none;
+}
+
+/* Quando estiver selecionado */
+.bb-categoria-item input:checked + span {
+  color: #000;
+}
+
+.bb-categoria-item:has(input:checked) {
+  background: #facc15;
+  color: #000;
+  border-color: #facc15;
+}
+
+.bb-categoria-item:hover {
+  border-color: #facc15;
+}
+
+/* ===== LAYOUT BARBEIROS + RESUMO (CARRINHO) ===== */
+.bb-barbeiros-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* grade dos barbeiros (3 colunas) */
+.bb-barbeiros-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 22px;
+}
+
+/* ===== Carrinho ===== */
+
+.bb-resumo-lateral {
+  background: linear-gradient(145deg, #19191a94, #161616a2);
+  border-radius: 18px;
+  padding: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+  max-width: 340px;
+}
+
+.bb-resumo-titulo {
+  color: #facc15;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+/* itens resumo */
+
+.bb-resumo-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+.bb-resumo-item strong {
+  color: white;
+}
+
+/* campos */
+
+.bb-campo {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bb-campo label {
+  font-size: 12px;
+  color: white;
+}
+
+.bb-select {
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px;
+  border-radius: 8px;
+  color: rgb(255, 255, 255);
+}
+
+.bb-textarea {
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  resize: none;
+  height: 70px;
+}
+
+/* total */
+
+.bb-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 16px;
+  color: white;
+  font-weight: bold;
+}
+
+/* botão */
+
+.bb-btn-confirmar {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #facc15;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.bb-btn-confirmar:hover {
+  background: #eab308;
+}
+
+.bb-btn-confirmar:disabled {
+  background: #5e5804;
+  cursor: not-allowed;
+}
+.bb-barbeiro-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centraliza horizontal */
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.bb-h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #facc15;
+}
+
+.bb-barbeiro-filtros {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* centraliza filtros */
+  gap: 10px;
+}
+.bb-select-estrelas {
+  background: #0d1b34;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.bb-select-estrelas:hover {
+  border-color: #f5c542;
+}
+
+.bb-select-estrelas:focus {
+  border-color: #f5c542;
+  box-shadow: 0 0 0 2px rgba(245, 197, 66, 0.2);
 }

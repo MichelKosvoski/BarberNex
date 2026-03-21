@@ -140,5 +140,12 @@ export const barbeariaExemplo = {
       imagem: Barbermodel,
       rating: 4,
     },
+    {
+      id: 3,
+      nome: "Adrian",
+      cargo: "Especialista",
+      imagem: Barbermodel,
+      rating: 4,
+    },
   ],
 };
