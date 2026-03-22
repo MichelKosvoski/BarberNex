@@ -20,6 +20,8 @@ function sanitizeUser(row) {
     barbearia_nome: row.barbearia_nome || null,
     barbearia_status: row.barbearia_status || null,
     plano: row.plano || null,
+    status_assinatura: row.status_assinatura || null,
+    status_pagamento: row.status_pagamento || null,
   };
 }
 
@@ -27,18 +29,18 @@ exports.register = async (req, res) => {
   const { nome, email, telefone, cpf, senha, tipo, barbearia_id } = req.body;
 
   if (!nome || !email || !senha) {
-    return res.status(400).json({ error: "Nome, email e senha são obrigatórios" });
+    return res.status(400).json({ error: "Nome, email e senha sao obrigatorios" });
   }
 
   const tipoFinal = tipo || "cliente";
 
-  if (!["cliente", "dono", "funcionario"].includes(tipoFinal)) {
-    return res.status(400).json({ error: "Tipo de usuário inválido" });
+  if (!["cliente", "dono", "funcionario", "master"].includes(tipoFinal)) {
+    return res.status(400).json({ error: "Tipo de usuario invalido" });
   }
 
-  if (tipoFinal !== "cliente" && !barbearia_id) {
+  if (!["cliente", "master"].includes(tipoFinal) && !barbearia_id) {
     return res.status(400).json({
-      error: "Usuários da barbearia precisam de uma barbearia vinculada",
+      error: "Usuarios da barbearia precisam de uma barbearia vinculada",
     });
   }
 
@@ -46,7 +48,7 @@ exports.register = async (req, res) => {
     const [existing] = await db.query("SELECT id FROM usuarios WHERE email = ?", [email]);
 
     if (existing.length > 0) {
-      return res.status(409).json({ error: "Já existe uma conta com esse email" });
+      return res.status(409).json({ error: "Ja existe uma conta com esse email" });
     }
 
     const senhaHash = hashSenha(senha);
@@ -69,7 +71,8 @@ exports.register = async (req, res) => {
 
     const [rows] = await db.query(
       `
-        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano
+        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano,
+               b.status_assinatura, b.status_pagamento
         FROM usuarios u
         LEFT JOIN barbearias b ON b.id = u.barbearia_id
         WHERE u.id = ?
@@ -90,13 +93,14 @@ exports.login = async (req, res) => {
   const { login, senha } = req.body;
 
   if (!login || !senha) {
-    return res.status(400).json({ error: "Login e senha são obrigatórios" });
+    return res.status(400).json({ error: "Login e senha sao obrigatorios" });
   }
 
   try {
     const [rows] = await db.query(
       `
-        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano
+        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano,
+               b.status_assinatura, b.status_pagamento
         FROM usuarios u
         LEFT JOIN barbearias b ON b.id = u.barbearia_id
         WHERE u.email = ? OR u.telefone = ?
@@ -106,18 +110,18 @@ exports.login = async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(401).json({ error: "Usuário não encontrado" });
+      return res.status(401).json({ error: "Usuario nao encontrado" });
     }
 
     const user = rows[0];
     const senhaHash = hashSenha(senha);
 
     if (user.senha !== senhaHash) {
-      return res.status(401).json({ error: "Senha inválida" });
+      return res.status(401).json({ error: "Senha invalida" });
     }
 
     if (user.status !== "ativo") {
-      return res.status(403).json({ error: "Usuário inativo" });
+      return res.status(403).json({ error: "Usuario inativo" });
     }
 
     if (
@@ -126,6 +130,15 @@ exports.login = async (req, res) => {
     ) {
       return res.status(403).json({
         error: "Acesso da barbearia bloqueado ou inativo",
+      });
+    }
+
+    if (
+      (user.tipo === "dono" || user.tipo === "funcionario") &&
+      ["bloqueada", "cancelada"].includes(user.status_assinatura)
+    ) {
+      return res.status(403).json({
+        error: "Assinatura da barbearia bloqueada ou cancelada",
       });
     }
 

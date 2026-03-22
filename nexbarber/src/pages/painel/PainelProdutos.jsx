@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { fileToDataUrl } from "../../utils/fileToDataUrl";
 import {
   createProduto,
   deleteProduto,
@@ -30,6 +31,7 @@ const categoriasPadrao = [
 const initialForm = {
   nome: "",
   descricao: "",
+  imagem: "",
   preco: "",
   estoque: "",
   categoria: "Bebida",
@@ -44,6 +46,7 @@ export default function PainelProdutos() {
   const [salvando, setSalvando] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState(initialForm);
+  const [arquivoImagemNome, setArquivoImagemNome] = useState("");
 
   async function carregarProdutos() {
     try {
@@ -77,6 +80,7 @@ export default function PainelProdutos() {
   const resetForm = () => {
     setForm(initialForm);
     setEditandoId(null);
+    setArquivoImagemNome("");
   };
 
   const preencherEdicao = (produto) => {
@@ -84,11 +88,13 @@ export default function PainelProdutos() {
     setForm({
       nome: produto.nome || "",
       descricao: produto.descricao || "",
+      imagem: produto.imagem || "",
       preco: String(produto.preco ?? ""),
       estoque: String(produto.estoque ?? ""),
       categoria: produto.categoria || "Bebida",
       status: produto.status || "ativo",
     });
+    setArquivoImagemNome("");
     setFeedback("");
     setErro("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -213,6 +219,39 @@ export default function PainelProdutos() {
               />
             </label>
 
+            <input
+              id="upload-produto-imagem"
+              className="painel-file-input"
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                const dataUrl = await fileToDataUrl(file);
+                setArquivoImagemNome(file?.name || "");
+                setForm((prev) => ({ ...prev, imagem: dataUrl }));
+              }}
+            />
+
+            <label htmlFor="upload-produto-imagem" className="painel-file-picker">
+              <span className="painel-file-button">Escolher imagem</span>
+              <span className="painel-file-name">
+                {arquivoImagemNome || (form.imagem ? "Imagem carregada" : "Nenhum arquivo escolhido")}
+              </span>
+            </label>
+
+            <div className="painel-actions-row">
+              <button
+                className="painel-secondary-button"
+                type="button"
+                onClick={() => {
+                  setArquivoImagemNome("");
+                  setForm((prev) => ({ ...prev, imagem: "" }));
+                }}
+              >
+                Remover imagem
+              </button>
+            </div>
+
             <label className="painel-field">
               <span>Status</span>
               <select
@@ -285,6 +324,28 @@ export default function PainelProdutos() {
               <div className="painel-empty-state">Sem alertas de estoque baixo.</div>
             )}
           </div>
+
+          <div className="painel-product-preview">
+            <div className="painel-product-card">
+              <div className="painel-product-thumb">
+                {form.imagem ? (
+                  <img src={form.imagem} alt={form.nome || "Produto"} />
+                ) : (
+                  <span>Sem imagem</span>
+                )}
+              </div>
+
+              <div className="painel-product-copy">
+                <strong>{form.nome || "Novo produto"}</strong>
+                <span>{form.categoria || "Categoria"}</span>
+              </div>
+
+              <div className="painel-product-meta">
+                <strong>{formatCurrency(form.preco || 0)}</strong>
+                <span>{form.estoque || 0} un</span>
+              </div>
+            </div>
+          </div>
         </article>
       </div>
 
@@ -314,7 +375,16 @@ export default function PainelProdutos() {
                   <tr key={produto.id}>
                     <td>
                       <div>
-                        <strong>{produto.nome}</strong>
+                        <div className="painel-product-row">
+                          <div className="painel-product-row-thumb">
+                            {produto.imagem ? (
+                              <img src={produto.imagem} alt={produto.nome} />
+                            ) : (
+                              <span>{String(produto.nome || "P").charAt(0)}</span>
+                            )}
+                          </div>
+                          <strong>{produto.nome}</strong>
+                        </div>
                         {produto.descricao ? (
                           <div className="painel-table-subcopy">{produto.descricao}</div>
                         ) : null}

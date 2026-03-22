@@ -33,6 +33,8 @@ export default function ModeloBarbearia() {
   const [clienteNome, setClienteNome] = useState("");
   const [clienteTelefone, setClienteTelefone] = useState("");
   const [salvandoAgendamento, setSalvandoAgendamento] = useState(false);
+  const [mensagemErro, setMensagemErro] = useState("");
+  const [agendamentoSucesso, setAgendamentoSucesso] = useState(null);
 
   const [barbearia, setBarbearia] = useState(null);
   const [barbeiros, setBarbeiros] = useState([]);
@@ -240,10 +242,11 @@ export default function ModeloBarbearia() {
 
   const handleAvancarAgendamento = () => {
     if (!horaSelecionada) {
-      alert("Selecione um horario");
+      setMensagemErro("Selecione um horario para continuar.");
       return;
     }
 
+    setMensagemErro("");
     handleChangeTab("servicos");
   };
 
@@ -255,17 +258,18 @@ export default function ModeloBarbearia() {
 
   const handleConfirmarAgendamento = async () => {
     if (!servicoSelecionado || !horaSelecionada || !barbeiroSelecionado) {
-      alert("Complete o agendamento antes de confirmar.");
+      setMensagemErro("Complete todas as etapas antes de confirmar.");
       return;
     }
 
     if (!clienteNome.trim() || !clienteTelefone.trim()) {
-      alert("Informe nome e telefone para concluir o agendamento.");
+      setMensagemErro("Informe nome e telefone para concluir o agendamento.");
       return;
     }
 
     try {
       setSalvandoAgendamento(true);
+      setMensagemErro("");
 
       await criarAgendamento({
         barbearia_id: Number(id),
@@ -283,7 +287,16 @@ export default function ModeloBarbearia() {
         }`,
       });
 
-      alert("Agendamento confirmado com sucesso.");
+      setAgendamentoSucesso({
+        cliente: clienteNome.trim(),
+        telefone: clienteTelefone.trim(),
+        data: `${String(dataSelecionada.getDate()).padStart(2, "0")}/${String(
+          dataSelecionada.getMonth() + 1,
+        ).padStart(2, "0")}/${dataSelecionada.getFullYear()}`,
+        hora: horaSelecionada,
+        servico: servicoSelecionado.nome,
+        barbeiro: barbeiroSelecionado.nome,
+      });
       setTab("agendamento");
       setHoraSelecionada("");
       setServicoSelecionado(null);
@@ -294,7 +307,7 @@ export default function ModeloBarbearia() {
       setTipoCliente("Adulto");
       setFormaPagamento("Pix");
     } catch (error) {
-      alert(error.message || "Nao foi possivel confirmar o agendamento.");
+      setMensagemErro(error.message || "Nao foi possivel confirmar o agendamento.");
     } finally {
       setSalvandoAgendamento(false);
     }
@@ -313,6 +326,21 @@ export default function ModeloBarbearia() {
     "--gold": barbearia.cor_primaria || "#f5c542",
     "--gold2": barbearia.cor_secundaria || "#d7a52b",
     "--bg": barbearia.cor_fundo || "#050607",
+    "--card": barbearia.cor_card || "#11141b",
+    "--border": barbearia.cor_borda || "#2a2f39",
+    "--text": barbearia.cor_texto || "#f3f4f6",
+    "--muted": barbearia.cor_texto_secundario || "rgba(255, 255, 255, 0.7)",
+    "--button-text": barbearia.cor_botao_texto || "#151515",
+    "--font-heading": barbearia.fonte_titulo || "Georgia, 'Times New Roman', serif",
+    "--font-body":
+      barbearia.fonte_corpo || "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    "--title-size": `${Number(barbearia.tamanho_titulo || 42)}px`,
+    "--body-size": `${Number(barbearia.tamanho_texto || 18)}px`,
+    "--logo-size": `${Number(barbearia.tamanho_logo || 86)}px`,
+    "--hero-overlay": toRgba(
+      barbearia.overlay_cor || "#000000",
+      Number(barbearia.overlay_opacidade ?? 72) / 100,
+    ),
   };
 
   return (
@@ -754,7 +782,57 @@ export default function ModeloBarbearia() {
           </div>
         </div>
       </section>
+
+      {mensagemErro ? <div className="bb-floating-feedback erro">{mensagemErro}</div> : null}
+
+      {agendamentoSucesso ? (
+        <div className="bb-modal-overlay" onClick={() => setAgendamentoSucesso(null)}>
+          <div className="bb-modal" onClick={(e) => e.stopPropagation()}>
+            <p className="bb-section-kicker">Agendamento confirmado</p>
+            <h3 className="bb-h3">Seu horario foi reservado com sucesso.</h3>
+
+            <div className="bb-modal-summary">
+              <div className="bb-modal-row"><span>Cliente</span><strong>{agendamentoSucesso.cliente}</strong></div>
+              <div className="bb-modal-row"><span>Telefone</span><strong>{agendamentoSucesso.telefone}</strong></div>
+              <div className="bb-modal-row"><span>Servico</span><strong>{agendamentoSucesso.servico}</strong></div>
+              <div className="bb-modal-row"><span>Barbeiro</span><strong>{agendamentoSucesso.barbeiro}</strong></div>
+              <div className="bb-modal-row"><span>Data</span><strong>{agendamentoSucesso.data}</strong></div>
+              <div className="bb-modal-row"><span>Horario</span><strong>{agendamentoSucesso.hora}</strong></div>
+            </div>
+
+            <div className="bb-modal-actions">
+              <button type="button" className="bb-btn-confirmar" onClick={() => setAgendamentoSucesso(null)}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function toRgba(color, alpha) {
+  if (!color) return `rgba(0, 0, 0, ${alpha})`;
+  if (String(color).startsWith("rgba")) return color;
+  if (String(color).startsWith("rgb")) {
+    const match = String(color).match(/\d+/g);
+    if (!match || match.length < 3) return `rgba(0, 0, 0, ${alpha})`;
+    const [r, g, b] = match.map(Number);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const hex = String(color).replace("#", "");
+  const normalized =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : hex;
+  const int = Number.parseInt(normalized, 16);
+  const r = (int >> 16) & 255;
+  const g = (int >> 8) & 255;
+  const b = int & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 

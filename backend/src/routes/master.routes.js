@@ -1,0 +1,10 @@
+const express = require("express");
+const controller = require("../controllers/master.controller");
+
+const router = express.Router();
+
+router.get("/resumo", controller.resumoMaster);
+router.get("/barbearias", controller.listarBarbeariasMaster);
+router.put("/barbearias/:id", controller.atualizarBarbeariaMaster);
+
+module.exports = router;

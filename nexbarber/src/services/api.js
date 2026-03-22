@@ -85,6 +85,10 @@ export async function getResumoPainel(barbeariaId) {
   return fetchJson(`${API_URL}/painel/${barbeariaId}/resumo`);
 }
 
+export async function getRelatoriosPainel(barbeariaId) {
+  return fetchJson(`${API_URL}/painel/${barbeariaId}/relatorios`);
+}
+
 export async function getDespesasPainel(barbeariaId) {
   return fetchJson(`${API_URL}/despesas/barbearia/${barbeariaId}`);
 }
@@ -324,6 +328,33 @@ export async function loginUser(payload) {
 export async function registerUser(payload) {
   return fetchJson(`${API_URL}/auth/register`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getMasterResumo(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.periodo) params.set("periodo", filters.periodo);
+  if (filters.estado) params.set("estado", filters.estado);
+  if (filters.cidade) params.set("cidade", filters.cidade);
+  if (filters.dataInicio) params.set("dataInicio", filters.dataInicio);
+  if (filters.dataFim) params.set("dataFim", filters.dataFim);
+
+  const query = params.toString();
+  return fetchJson(`${API_URL}/master/resumo${query ? `?${query}` : ""}`);
+}
+
+export async function getMasterBarbearias() {
+  return fetchJson(`${API_URL}/master/barbearias`);
+}
+
+export async function updateMasterBarbearia(id, payload) {
+  return fetchJson(`${API_URL}/master/barbearias/${id}`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },

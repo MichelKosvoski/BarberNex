@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   FiArrowUpRight,
   FiCalendar,
@@ -22,17 +23,53 @@ function formatCurrency(value) {
   });
 }
 
-function getChartPoints(series, key) {
-  if (series.length <= 1) {
-    return "0,80 100,20";
+function getChartMetrics(series) {
+  const values = series.flatMap((item) => [
+    Number(item.entradas || 0),
+    Number(item.liquido || 0),
+  ]);
+
+  if (values.length === 0) {
+    return {
+      min: 0,
+      max: 0,
+      zeroY: 55,
+      hasData: false,
+    };
   }
 
-  const max = Math.max(...series.map((item) => Number(item[key] || 0)), 1);
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 0);
+  const range = max - min || 1;
+  const zeroY = 10 + ((max - 0) / range) * 80;
+
+  return {
+    min,
+    max,
+    zeroY,
+    hasData: values.some((value) => value !== 0),
+  };
+}
+
+function getChartPoints(series, key, metrics) {
+  if (series.length === 0) {
+    return "";
+  }
+
+  if (!metrics.hasData) {
+    return series
+      .map((_, index) => {
+        const x = series.length === 1 ? 50 : (index / (series.length - 1)) * 100;
+        return `${x},${metrics.zeroY}`;
+      })
+      .join(" ");
+  }
 
   return series
     .map((item, index) => {
-      const x = (index / (series.length - 1)) * 100;
-      const y = 90 - (Number(item[key] || 0) / max) * 70;
+      const x = series.length === 1 ? 50 : (index / (series.length - 1)) * 100;
+      const value = Number(item[key] || 0);
+      const y = 10 + ((metrics.max - value) / ((metrics.max - metrics.min) || 1)) * 80;
       return `${x},${y}`;
     })
     .join(" ");
@@ -118,8 +155,9 @@ export default function PainelHome() {
   const barbeirosTop = dados?.rankingBarbeiros || [];
   const faturamentoMensal = dados?.faturamentoMensal || [];
   const despesasRecentes = dados?.despesasRecentes || [];
-  const pontosEntradas = getChartPoints(faturamentoMensal, "entradas");
-  const pontosLiquido = getChartPoints(faturamentoMensal, "liquido");
+  const chartMetrics = getChartMetrics(faturamentoMensal);
+  const pontosEntradas = getChartPoints(faturamentoMensal, "entradas", chartMetrics);
+  const pontosLiquido = getChartPoints(faturamentoMensal, "liquido", chartMetrics);
 
   const salvarDespesa = async (e) => {
     e.preventDefault();
@@ -167,10 +205,13 @@ export default function PainelHome() {
           <h3>Veja entradas, saidas e lucro do dia sem perder o controle financeiro da barbearia.</h3>
         </div>
 
-        <button className="painel-primary-button" type="button">
+        <Link
+          to="/painel/agenda"
+          className="painel-primary-button"
+        >
           Ver agenda completa
           <FiArrowUpRight />
-        </button>
+        </Link>
       </div>
 
       {erro ? <div className="painel-feedback erro">{erro}</div> : null}
@@ -215,7 +256,7 @@ export default function PainelHome() {
             </button>
           </div>
 
-          <div className="painel-chart-shell">
+          <div className={`painel-chart-shell ${!chartMetrics.hasData ? "is-empty" : ""}`}>
             <svg viewBox="0 0 100 100" className="painel-chart-svg" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="chartStrokeEntradas" x1="0%" x2="100%" y1="0%" y2="0%">
@@ -228,20 +269,32 @@ export default function PainelHome() {
                 </linearGradient>
               </defs>
 
-              <polyline
-                className="painel-chart-line"
-                fill="none"
-                stroke="url(#chartStrokeEntradas)"
-                strokeWidth="2"
-                points={pontosEntradas}
+              <line
+                className="painel-chart-zero-line"
+                x1="0"
+                x2="100"
+                y1={chartMetrics.zeroY}
+                y2={chartMetrics.zeroY}
               />
-              <polyline
-                className="painel-chart-line painel-chart-line-secondary"
-                fill="none"
-                stroke="url(#chartStrokeLiquido)"
-                strokeWidth="2"
-                points={pontosLiquido}
-              />
+
+              {pontosEntradas ? (
+                <polyline
+                  className="painel-chart-line"
+                  fill="none"
+                  stroke="url(#chartStrokeEntradas)"
+                  strokeWidth="2"
+                  points={pontosEntradas}
+                />
+              ) : null}
+              {pontosLiquido ? (
+                <polyline
+                  className="painel-chart-line painel-chart-line-secondary"
+                  fill="none"
+                  stroke="url(#chartStrokeLiquido)"
+                  strokeWidth="2"
+                  points={pontosLiquido}
+                />
+              ) : null}
             </svg>
 
             <div className="painel-chart-legend">
@@ -256,6 +309,10 @@ export default function PainelHome() {
                 <span>Sem dados</span>
               )}
             </div>
+
+            {!chartMetrics.hasData ? (
+              <div className="painel-chart-empty">Sem movimentacao financeira no periodo.</div>
+            ) : null}
           </div>
         </section>
 

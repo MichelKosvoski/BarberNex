@@ -22,7 +22,7 @@ exports.listarProdutos = async (req, res) => {
 
 exports.criarProduto = async (req, res) => {
   const { barbeariaId } = req.params;
-  const { nome, descricao, preco, estoque, categoria, status } = req.body;
+  const { nome, descricao, imagem, preco, estoque, categoria, status } = req.body;
 
   if (!nome || preco === undefined) {
     return res.status(400).json({ error: "Nome e preço são obrigatórios" });
@@ -32,13 +32,14 @@ exports.criarProduto = async (req, res) => {
     const [result] = await db.query(
       `
         INSERT INTO produtos
-        (barbearia_id, nome, descricao, preco, estoque, categoria, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (barbearia_id, nome, descricao, imagem, preco, estoque, categoria, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         barbeariaId,
         nome,
         descricao || null,
+        imagem || null,
         preco,
         estoque ?? 0,
         categoria || null,
@@ -57,7 +58,7 @@ exports.criarProduto = async (req, res) => {
 
 exports.atualizarProduto = async (req, res) => {
   const { id } = req.params;
-  const { nome, descricao, preco, estoque, categoria, status } = req.body;
+  const { nome, descricao, imagem, preco, estoque, categoria, status } = req.body;
 
   if (!nome || preco === undefined) {
     return res.status(400).json({ error: "Nome e preço são obrigatórios" });
@@ -67,10 +68,19 @@ exports.atualizarProduto = async (req, res) => {
     const [result] = await db.query(
       `
         UPDATE produtos
-        SET nome = ?, descricao = ?, preco = ?, estoque = ?, categoria = ?, status = ?
+        SET nome = ?, descricao = ?, imagem = ?, preco = ?, estoque = ?, categoria = ?, status = ?
         WHERE id = ?
       `,
-      [nome, descricao || null, preco, estoque ?? 0, categoria || null, status || "ativo", id],
+      [
+        nome,
+        descricao || null,
+        imagem || null,
+        preco,
+        estoque ?? 0,
+        categoria || null,
+        status || "ativo",
+        id,
+      ],
     );
 
     if (result.affectedRows === 0) {

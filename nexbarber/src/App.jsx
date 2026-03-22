@@ -16,6 +16,10 @@ import PainelPersonalizar from "./pages/painel/PainelPersonalizar";
 import PainelAssinaturas from "./pages/painel/PainelAssinaturas";
 import PainelPdv from "./pages/painel/PainelPdv";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MasterLayout from "./pages/master/MasterLayout";
+import MasterHome from "./pages/master/MasterHome";
+import MasterBarbearias from "./pages/master/MasterBarbearias";
+import MasterPagamentos from "./pages/master/MasterPagamentos";
 
 function App() {
   return (
@@ -44,6 +48,20 @@ function App() {
           <Route path="pdv" element={<PainelPdv />} />
           <Route path="personalizar" element={<PainelPersonalizar />} />
           <Route path="configuracoes" element={<PainelConfiguracoes />} />
+        </Route>
+        <Route
+          path="/master"
+          element={
+            <ProtectedRoute allow={["master"]}>
+              <MasterLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<MasterHome />} />
+          <Route path="barbearias" element={<MasterBarbearias />} />
+          <Route path="pagamentos" element={<MasterPagamentos />} />
+          <Route path="relatorios" element={<Navigate to="/master" replace />} />
+          <Route path="configuracoes" element={<Navigate to="/master" replace />} />
         </Route>
         <Route path="/dashboard" element={<Navigate to="/painel" replace />} />
       </Routes>

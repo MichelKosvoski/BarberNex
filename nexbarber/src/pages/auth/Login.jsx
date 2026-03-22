@@ -25,7 +25,9 @@ export default function Login() {
 
       setSessionUser(resposta.user);
 
-      if (resposta.user.tipo === "dono" || resposta.user.tipo === "funcionario") {
+      if (resposta.user.tipo === "master") {
+        navigate("/master");
+      } else if (resposta.user.tipo === "dono" || resposta.user.tipo === "funcionario") {
         navigate("/painel");
       } else {
         navigate("/");
