@@ -1,10 +1,14 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   FiBarChart2,
   FiCalendar,
   FiClock,
+  FiCreditCard,
   FiHome,
+  FiImage,
   FiPackage,
+  FiRepeat,
   FiScissors,
   FiSettings,
   FiShoppingBag,
@@ -12,6 +16,7 @@ import {
 } from "react-icons/fi";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiAdminLine } from "react-icons/ri";
+import { getBarbearia, getPainelBarbeariaId } from "../../services/api";
 import "../../styles/painel.css";
 
 const menuPrincipal = [
@@ -22,6 +27,9 @@ const menuPrincipal = [
   { to: "/painel/servicos", label: "Servicos", icon: FiShoppingBag },
   { to: "/painel/produtos", label: "Produtos", icon: FiPackage },
   { to: "/painel/relatorios", label: "Relatorios", icon: FiBarChart2 },
+  { to: "/painel/assinaturas", label: "Assinaturas", icon: FiRepeat },
+  { to: "/painel/pdv", label: "PDV", icon: FiCreditCard },
+  { to: "/painel/personalizar", label: "Personalizar Site", icon: FiImage },
 ];
 
 const menuSecundario = [
@@ -29,6 +37,23 @@ const menuSecundario = [
 ];
 
 export default function PainelLayout() {
+  const [barbearia, setBarbearia] = useState(null);
+
+  useEffect(() => {
+    const barbeariaId = getPainelBarbeariaId();
+
+    async function carregarBarbearia() {
+      try {
+        const data = await getBarbearia(barbeariaId);
+        setBarbearia(data);
+      } catch (error) {
+        console.error("Erro ao carregar dados da barbearia:", error);
+      }
+    }
+
+    carregarBarbearia();
+  }, []);
+
   return (
     <div className="painel-shell">
       <aside className="painel-sidebar">
@@ -89,7 +114,7 @@ export default function PainelLayout() {
         <header className="painel-topbar">
           <div>
             <p className="painel-topbar-kicker">Barbearia ativa</p>
-            <h2>Don Bigode Barbearia</h2>
+            <h2>{barbearia?.nome || "Carregando barbearia"}</h2>
           </div>
 
           <div className="painel-topbar-actions">
@@ -105,7 +130,7 @@ export default function PainelLayout() {
               </div>
               <div>
                 <strong>Administrador</strong>
-                <span>Plano Pro</span>
+                <span>{barbearia?.plano || "Plano base"}</span>
               </div>
             </div>
           </div>

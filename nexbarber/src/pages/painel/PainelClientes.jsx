@@ -1,11 +1,29 @@
-const clientes = [
-  { nome: "Joao Mendes", visitas: "22 visitas", ticket: "R$ 110 medio" },
-  { nome: "Carlos Prado", visitas: "15 visitas", ticket: "R$ 86 medio" },
-  { nome: "Rafael Lima", visitas: "11 visitas", ticket: "R$ 134 medio" },
-  { nome: "Matheus Alves", visitas: "8 visitas", ticket: "R$ 72 medio" },
-];
+import { useEffect, useState } from "react";
+import { getClientesPainel, getPainelBarbeariaId } from "../../services/api";
 
 export default function PainelClientes() {
+  const [clientes, setClientes] = useState([]);
+  const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    const barbeariaId = getPainelBarbeariaId();
+
+    async function carregarClientes() {
+      try {
+        const data = await getClientesPainel(barbeariaId);
+        setClientes(data);
+      } catch (error) {
+        setErro(error.message);
+      }
+    }
+
+    carregarClientes();
+  }, []);
+
+  const clientesComRetorno = clientes.filter(
+    (cliente) => Number(cliente.total_agendamentos || 0) > 1,
+  ).length;
+
   return (
     <section className="painel-content">
       <div className="painel-hero painel-hero-compact">
@@ -14,6 +32,8 @@ export default function PainelClientes() {
           <h3>Veja recorrencia, ticket medio e relacionamento com a base ativa.</h3>
         </div>
       </div>
+
+      {erro ? <div className="painel-feedback erro">{erro}</div> : null}
 
       <div className="painel-section-grid">
         <article className="painel-card">
@@ -25,15 +45,19 @@ export default function PainelClientes() {
           </div>
 
           <div className="painel-list-grid">
-            {clientes.map((cliente) => (
-              <div key={cliente.nome} className="painel-list-item">
-                <div>
-                  <strong>{cliente.nome}</strong>
-                  <span>{cliente.visitas}</span>
+            {clientes.length > 0 ? (
+              clientes.map((cliente) => (
+                <div key={cliente.id} className="painel-list-item">
+                  <div>
+                    <strong>{cliente.nome}</strong>
+                    <span>{Number(cliente.total_agendamentos || 0)} agendamentos</span>
+                  </div>
+                  <strong>{cliente.telefone || "Sem telefone"}</strong>
                 </div>
-                <strong>{cliente.ticket}</strong>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="painel-empty-state">Nenhum cliente cadastrado.</div>
+            )}
           </div>
         </article>
 
@@ -48,15 +72,15 @@ export default function PainelClientes() {
           <div className="painel-info-stack">
             <div className="painel-info-pill">
               <span>Total cadastrados</span>
-              <strong>124</strong>
+              <strong>{clientes.length}</strong>
             </div>
             <div className="painel-info-pill">
-              <span>Retorno no mes</span>
-              <strong>68%</strong>
+              <span>Com retorno</span>
+              <strong>{clientesComRetorno}</strong>
             </div>
             <div className="painel-info-pill">
-              <span>NPS interno</span>
-              <strong>9.1</strong>
+              <span>Com e-mail</span>
+              <strong>{clientes.filter((cliente) => Boolean(cliente.email)).length}</strong>
             </div>
           </div>
         </article>

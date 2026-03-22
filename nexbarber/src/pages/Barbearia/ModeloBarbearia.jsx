@@ -1,6 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getBarbearia, getBarbeiros, getServicos } from "../../services/api";
+import {
+  getBarbearia,
+  getBarbeiros,
+  getPlanosAssinatura,
+  getServicos,
+} from "../../services/api";
 
 import ServiceCard from "../../components/ServiceCard";
 import BarberCard from "../../components/BarberCard";
@@ -8,9 +13,12 @@ import "../../styles/barbearia.css";
 
 export default function ModeloBarbearia() {
   const { id } = useParams();
+  const hoje = new Date();
+  const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
   const [tab, setTab] = useState("agendamento");
-  const [diaSelecionado, setDiaSelecionado] = useState(0);
+  const [mesAtual, setMesAtual] = useState(inicioMesAtual);
+  const [dataSelecionada, setDataSelecionada] = useState(hoje);
   const [horaSelecionada, setHoraSelecionada] = useState("");
   const [busca, setBusca] = useState("");
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
@@ -22,6 +30,7 @@ export default function ModeloBarbearia() {
   const [barbearia, setBarbearia] = useState(null);
   const [barbeiros, setBarbeiros] = useState([]);
   const [servicos, setServicos] = useState([]);
+  const [planos, setPlanos] = useState([]);
 
   useEffect(() => {
     async function carregar() {
@@ -29,10 +38,12 @@ export default function ModeloBarbearia() {
         const barbeariaData = await getBarbearia(id);
         const barbeirosData = await getBarbeiros(id);
         const servicosData = await getServicos(id);
+        const planosData = await getPlanosAssinatura(id);
 
         setBarbearia(barbeariaData);
         setBarbeiros(Array.isArray(barbeirosData) ? barbeirosData : []);
         setServicos(Array.isArray(servicosData) ? servicosData : []);
+        setPlanos(Array.isArray(planosData) ? planosData : []);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
@@ -41,28 +52,63 @@ export default function ModeloBarbearia() {
     carregar();
   }, [id]);
 
-  const estaAberto = barbearia?.aberto ?? barbearia?.aberta ?? false;
+  const estaAberto = barbearia?.status === "ativo";
 
-  const dias = useMemo(() => {
-    const hoje = new Date();
+  const diasSemana = ["D", "S", "T", "Q", "Q", "S", "S"];
+  const mesesLabel = [
+    "janeiro",
+    "fevereiro",
+    "marco",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+  ];
+
+  const calendarioDias = useMemo(() => {
+    const primeiroDiaDoMes = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), 1);
+    const ultimoDiaDoMes = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 0);
+    const deslocamentoInicial = primeiroDiaDoMes.getDay();
+    const totalDias = ultimoDiaDoMes.getDate();
+    const totalCelulas = Math.ceil((deslocamentoInicial + totalDias) / 7) * 7;
     const lista = [];
-    const semana = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
+    const hojeNormalizado = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    const dataSelecionadaNormalizada = new Date(
+      dataSelecionada.getFullYear(),
+      dataSelecionada.getMonth(),
+      dataSelecionada.getDate(),
+    );
 
-    for (let i = 0; i < 60; i += 1) {
-      const novaData = new Date(hoje);
-      novaData.setDate(hoje.getDate() + i);
+    for (let index = 0; index < totalCelulas; index += 1) {
+      const numeroDia = index - deslocamentoInicial + 1;
+      const data = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), numeroDia);
+      const dataNormalizada = new Date(
+        data.getFullYear(),
+        data.getMonth(),
+        data.getDate(),
+      );
 
       lista.push({
-        label: i === 0 ? "HOJE" : semana[novaData.getDay()],
-        dia: novaData.getDate(),
-        mes: novaData.getMonth(),
-        ano: novaData.getFullYear(),
-        completa: novaData,
+        key: `${data.getFullYear()}-${data.getMonth()}-${data.getDate()}`,
+        data,
+        dia: data.getDate(),
+        pertenceAoMes: data.getMonth() === mesAtual.getMonth(),
+        ehPassado: dataNormalizada < hojeNormalizado,
+        ehHoje: dataNormalizada.getTime() === hojeNormalizado.getTime(),
+        ehSelecionado:
+          dataNormalizada.getTime() === dataSelecionadaNormalizada.getTime(),
       });
     }
 
     return lista;
-  }, []);
+  }, [mesAtual, dataSelecionada]);
+
+  const tituloMesAtual = `${mesesLabel[mesAtual.getMonth()]} de ${mesAtual.getFullYear()}`;
 
   const horarios = [
     "09:00",
@@ -78,26 +124,14 @@ export default function ModeloBarbearia() {
   ];
 
   const horarioEstaDisponivel = (hora) => {
-    const hoje = new Date();
-    const diaEscolhido = dias[diaSelecionado];
-
-    if (!diaEscolhido) {
-      return true;
-    }
-
     const ehHoje =
-      diaEscolhido.dia === hoje.getDate() &&
-      diaEscolhido.mes === hoje.getMonth() &&
-      diaEscolhido.ano === hoje.getFullYear();
-
-    if (!ehHoje) {
-      return true;
-    }
-
+      dataSelecionada.getDate() === hoje.getDate() &&
+      dataSelecionada.getMonth() === hoje.getMonth() &&
+      dataSelecionada.getFullYear() === hoje.getFullYear();
+    if (!ehHoje) return true;
     const [h, m] = hora.split(":");
     const horaComparar = new Date();
     horaComparar.setHours(Number(h), Number(m), 0, 0);
-
     return horaComparar > hoje;
   };
 
@@ -112,7 +146,15 @@ export default function ModeloBarbearia() {
   const categoriasDisponiveis = useMemo(
     () =>
       [
-        ...new Set(servicos.flatMap((servico) => servico.categoria || [])),
+        ...new Set(
+          servicos.flatMap((servico) =>
+            Array.isArray(servico.categoria)
+              ? servico.categoria
+              : servico.categoria
+                ? [servico.categoria]
+                : [],
+          ),
+        ),
       ].filter(Boolean),
     [servicos],
   );
@@ -127,11 +169,17 @@ export default function ModeloBarbearia() {
     }
 
     if (categoriasSelecionadas.length > 0) {
-      lista = lista.filter((servico) =>
-        categoriasSelecionadas.some((categoria) =>
-          (servico.categoria || []).includes(categoria),
-        ),
-      );
+      lista = lista.filter((servico) => {
+        const categorias = Array.isArray(servico.categoria)
+          ? servico.categoria
+          : servico.categoria
+            ? [servico.categoria]
+            : [];
+
+        return categoriasSelecionadas.some((categoria) =>
+          categorias.includes(categoria),
+        );
+      });
     }
 
     return lista;
@@ -155,19 +203,52 @@ export default function ModeloBarbearia() {
     return lista;
   }, [barbeiros, buscaBarbeiro, filtroEstrelas]);
 
+  const planosAtivos = useMemo(
+    () => planos.filter((plano) => plano.status !== "inativo"),
+    [planos],
+  );
+
+  const planoPublicoVisivel =
+    Number(barbearia?.exibir_planos_publico ?? 1) !== 0 &&
+    planosAtivos.length > 0;
+
   const irPara = (alvoId) => {
     const el = document.getElementById(alvoId);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleChangeTab = (novaTab) => {
+    setTab(novaTab);
+
+    const anchors = {
+      agendamento: "sec-agendamento",
+      servicos: "sec-servicos",
+      planos: "sec-planos",
+      barbeiro: "sec-barbeiros",
+    };
+
+    requestAnimationFrame(() => {
+      irPara(anchors[novaTab]);
+    });
+  };
+
+  const podeVoltarMes =
+    mesAtual.getFullYear() > inicioMesAtual.getFullYear() ||
+    (mesAtual.getFullYear() === inicioMesAtual.getFullYear() &&
+      mesAtual.getMonth() > inicioMesAtual.getMonth());
 
   if (!barbearia) {
     return <div>Carregando barbearia...</div>;
   }
 
+  const visualStyle = {
+    "--gold": barbearia.cor_primaria || "#f5c542",
+    "--gold2": barbearia.cor_secundaria || "#d7a52b",
+    "--bg": barbearia.cor_fundo || "#050607",
+  };
+
   return (
-    <div className="barbearia-page">
+    <div className="barbearia-page" style={visualStyle}>
       <section
         className="bb-hero"
         style={{ backgroundImage: `url(${barbearia?.banner || ""})` }}
@@ -185,7 +266,15 @@ export default function ModeloBarbearia() {
             </div>
 
             <div>
-              <h1 className="bb-title">{barbearia?.nome}</h1>
+              <h1 className="bb-title">
+                {barbearia?.texto_hero || barbearia?.nome}
+              </h1>
+
+              <p className="bb-subtitle">
+                {barbearia?.subtitulo_hero ||
+                  barbearia?.descricao ||
+                  "Sua barbearia com identidade propria e agendamento online."}
+              </p>
 
               <div className="bb-meta">
                 <div className="bb-stars">★★★★★</div>
@@ -197,8 +286,11 @@ export default function ModeloBarbearia() {
             </div>
           </div>
 
-          <button className="bb-cta" onClick={() => irPara("sec-agendamento")}>
-            Agendar Horário
+          <button
+            className="bb-cta"
+            onClick={() => handleChangeTab("agendamento")}
+          >
+            Agendar Horario
           </button>
         </div>
       </section>
@@ -206,55 +298,114 @@ export default function ModeloBarbearia() {
       <div className="bb-tabs">
         <button
           className={`bb-tab ${tab === "agendamento" ? "active" : ""}`}
-          onClick={() => setTab("agendamento")}
+          onClick={() => handleChangeTab("agendamento")}
         >
           Agendamento
         </button>
         <button
           className={`bb-tab ${tab === "servicos" ? "active" : ""}`}
-          onClick={() => setTab("servicos")}
+          onClick={() => handleChangeTab("servicos")}
         >
-          Serviços
+          Servicos
+        </button>
+        <button
+          className={`bb-tab ${tab === "planos" ? "active" : ""}`}
+          onClick={() => handleChangeTab("planos")}
+        >
+          Planos
         </button>
         <button
           className={`bb-tab ${tab === "barbeiro" ? "active" : ""}`}
-          onClick={() => setTab("barbeiro")}
+          onClick={() => handleChangeTab("barbeiro")}
         >
           Escolha seu Barbeiro
         </button>
       </div>
 
-      <section id="sec-agendamento" className="bb-section">
+      <section
+        id="sec-agendamento"
+        className={`bb-section ${tab !== "agendamento" ? "bb-section-hidden" : ""}`}
+      >
+        <div className="bb-section-header">
+          <p className="bb-section-kicker">Agendamento</p>
+          <h2 className="bb-h2">Reserve seu horario com poucos cliques</h2>
+          <p className="bb-section-subtitle">
+            Escolha a data, selecione um horario e avance para montar seu atendimento.
+          </p>
+        </div>
+
         <div className="bb-grid2">
           <div className="bb-infoCard">
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {barbearia?.cidade} - {barbearia?.uf}
+              <span className="bb-dot" /> {barbearia?.cidade || "Cidade"} -{" "}
+              {barbearia?.estado || "--"}
             </div>
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {barbearia?.telefone}
+              <span className="bb-dot" /> {barbearia?.telefone || "Telefone nao informado"}
             </div>
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {barbearia?.horario}
+              <span className="bb-dot" />{" "}
+              {barbearia?.horario_funcionamento || "Horario nao informado"}
             </div>
           </div>
 
           <div className="bb-scheduleCard">
-            <div className="bb-days-scroll">
-              {dias.map((dia, idx) => (
+            <div className="bb-calendar-header">
+              <button
+                type="button"
+                className="bb-calendar-nav"
+                onClick={() =>
+                  podeVoltarMes &&
+                  setMesAtual(
+                    new Date(mesAtual.getFullYear(), mesAtual.getMonth() - 1, 1),
+                  )
+                }
+                disabled={!podeVoltarMes}
+              >
+                {"<"}
+              </button>
+              <strong>{tituloMesAtual}</strong>
+              <button
+                type="button"
+                className="bb-calendar-nav"
+                onClick={() =>
+                  setMesAtual(
+                    new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 1),
+                  )
+                }
+              >
+                {">"}
+              </button>
+            </div>
+            <div className="bb-calendar-weekdays">
+              {diasSemana.map((dia) => (
+                <span key={dia}>{dia}</span>
+              ))}
+            </div>
+            <div className="bb-calendar-grid">
+              {calendarioDias.map((dia) => (
                 <button
-                  key={`${dia.ano}-${dia.mes}-${dia.dia}`}
-                  className={`bb-day ${diaSelecionado === idx ? "active" : ""}`}
+                  key={dia.key}
+                  type="button"
+                  className={[
+                    "bb-day",
+                    dia.ehSelecionado ? "active" : "",
+                    dia.ehHoje ? "is-today" : "",
+                    !dia.pertenceAoMes ? "is-outside" : "",
+                    dia.ehPassado ? "disabled" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  disabled={dia.ehPassado || !dia.pertenceAoMes}
                   onClick={() => {
-                    setDiaSelecionado(idx);
+                    setDataSelecionada(dia.data);
                     setHoraSelecionada("");
                   }}
                 >
-                  <span className="bb-dayLabel">{dia.label}</span>
                   <span className="bb-dayNum">{dia.dia}</span>
                 </button>
               ))}
             </div>
-
             <div className="bb-times">
               {horarios.map((hora) => {
                 const disponivel = horarioEstaDisponivel(hora);
@@ -267,9 +418,7 @@ export default function ModeloBarbearia() {
                       horaSelecionada === hora ? "active" : ""
                     } ${!disponivel ? "disabled" : ""}`}
                     onClick={() => {
-                      if (disponivel) {
-                        setHoraSelecionada(hora);
-                      }
+                      if (disponivel) setHoraSelecionada(hora);
                     }}
                   >
                     {hora}
@@ -283,14 +432,12 @@ export default function ModeloBarbearia() {
                 className="bb-continue"
                 onClick={() => {
                   if (!horaSelecionada) {
-                    alert("Selecione um horário");
+                    alert("Selecione um horario");
                     return;
                   }
 
-                  const dia = dias[diaSelecionado];
-                  alert(
-                    `Agendamento: ${dia.dia}/${dia.mes + 1}/${dia.ano} às ${horaSelecionada}`,
-                  );
+                  const dataFormatada = `${dataSelecionada.getDate()}/${dataSelecionada.getMonth() + 1}/${dataSelecionada.getFullYear()}`;
+                  alert(`Agendamento: ${dataFormatada} as ${horaSelecionada}`);
                 }}
               >
                 Continuar
@@ -300,13 +447,22 @@ export default function ModeloBarbearia() {
         </div>
       </section>
 
-      <section className="bb-section">
-        <h2 className="bb-h2">Serviços</h2>
+      <section
+        id="sec-servicos"
+        className={`bb-section ${tab !== "servicos" ? "bb-section-hidden" : ""}`}
+      >
+        <div className="bb-section-header">
+          <p className="bb-section-kicker">Catalogo</p>
+          <h2 className="bb-h2">Servicos em destaque</h2>
+          <p className="bb-section-subtitle">
+            Filtre por categoria, compare os precos e escolha o servico ideal.
+          </p>
+        </div>
 
         <div className="bb-filtros">
           <input
             type="text"
-            placeholder="Buscar serviço..."
+            placeholder="Buscar servico..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="bb-input-busca"
@@ -327,20 +483,103 @@ export default function ModeloBarbearia() {
         </div>
 
         <div className="bb-cardsGrid">
-          {servicosFiltrados.map((servico) => (
-            <ServiceCard
-              key={servico.id}
-              servico={servico}
-              selected={servicoSelecionado?.id === servico.id}
-              onSelect={() => setServicoSelecionado(servico)}
-            />
-          ))}
+          {servicosFiltrados.length > 0 ? (
+            servicosFiltrados.map((servico) => (
+              <ServiceCard
+                key={servico.id}
+                servico={{
+                  ...servico,
+                  duracao: servico.duracao || servico.duracao_minutos,
+                  categoria: Array.isArray(servico.categoria)
+                    ? servico.categoria
+                    : servico.categoria
+                      ? [servico.categoria]
+                      : [],
+                }}
+                selected={servicoSelecionado?.id === servico.id}
+                onSelect={() => setServicoSelecionado(servico)}
+              />
+            ))
+          ) : (
+            <div className="bb-empty-card">
+              Nenhum servico encontrado com esse filtro.
+            </div>
+          )}
         </div>
+
       </section>
 
-      <section id="sec-barbeiros" className="bb-section">
+      <section
+        id="sec-planos"
+        className={`bb-section ${tab !== "planos" ? "bb-section-hidden" : ""}`}
+      >
+        <div className="bb-section-header">
+          <p className="bb-section-kicker">Assinaturas</p>
+          <h2 className="bb-h2">
+            {barbearia?.titulo_planos_publico || "Planos da barbearia"}
+          </h2>
+          <p className="bb-section-subtitle">
+            {barbearia?.subtitulo_planos_publico ||
+              "Escolha um plano recorrente para manter o cuidado em dia."}
+          </p>
+        </div>
+
+        {planoPublicoVisivel ? (
+          <div className="bb-planos-grid">
+            {planosAtivos.map((plano) => (
+              <article key={plano.id} className="bb-plano-card">
+                <div className="bb-plano-tag">{plano.recorrencia || "mensal"}</div>
+
+                <h3>{plano.nome}</h3>
+                <p className="bb-plano-descricao">
+                  {plano.descricao || "Plano recorrente da barbearia."}
+                </p>
+
+                <div className="bb-plano-preco">
+                  <strong>R$ {Number(plano.preco || 0).toFixed(2)}</strong>
+                  <span>/ mes</span>
+                </div>
+
+                <div className="bb-plano-benefits">
+                  <div className="bb-plano-benefit">
+                    <span className="bb-dot" />
+                    <span>{plano.cortes_inclusos || 0} cortes inclusos</span>
+                  </div>
+                  <div className="bb-plano-benefit">
+                    <span className="bb-dot" />
+                    <span>{plano.barbas_inclusas || 0} barbas inclusas</span>
+                  </div>
+                  {plano.beneficios ? (
+                    <div className="bb-plano-benefit">
+                      <span className="bb-dot" />
+                      <span>{plano.beneficios}</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <button className="bb-plano-btn" type="button">
+                  Quero esse plano
+                </button>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="bb-empty-card">
+            Esta barbearia nao possui planos ativos no momento.
+          </div>
+        )}
+      </section>
+
+      <section
+        id="sec-barbeiros"
+        className={`bb-section ${tab !== "barbeiro" ? "bb-section-hidden" : ""}`}
+      >
         <div className="bb-barbeiro-top">
+          <p className="bb-section-kicker">Equipe</p>
           <h3 className="bb-h3">Escolha seu Barbeiro</h3>
+          <p className="bb-section-subtitle">
+            Compare especialidades, avaliacoes e defina quem vai atender voce.
+          </p>
 
           <div className="bb-barbeiro-filtros">
             <input
@@ -356,7 +595,7 @@ export default function ModeloBarbearia() {
               onChange={(e) => setFiltroEstrelas(Number(e.target.value))}
               className="bb-select-estrelas"
             >
-              <option value={0}>Todas avaliações</option>
+              <option value={0}>Todas avaliacoes</option>
               <option value={5}>★★★★★</option>
               <option value={4}>★★★★+</option>
               <option value={3}>★★★+</option>
@@ -366,25 +605,29 @@ export default function ModeloBarbearia() {
 
         <div className="bb-barbeiros-layout">
           <div className="bb-barbeiros-grid">
-            {barbeirosFiltrados.map((barbeiro) => (
-              <BarberCard
-                key={barbeiro.id}
-                barbeiro={barbeiro}
-                selected={barbeiroSelecionado?.id === barbeiro.id}
-                onSelect={() => setBarbeiroSelecionado(barbeiro)}
-              />
-            ))}
+            {barbeirosFiltrados.length > 0 ? (
+              barbeirosFiltrados.map((barbeiro) => (
+                <BarberCard
+                  key={barbeiro.id}
+                  barbeiro={barbeiro}
+                  selected={barbeiroSelecionado?.id === barbeiro.id}
+                  onSelect={() => setBarbeiroSelecionado(barbeiro)}
+                />
+              ))
+            ) : (
+              <div className="bb-empty-card">
+                Nenhum barbeiro encontrado com esse filtro.
+              </div>
+            )}
           </div>
 
           <div className="bb-resumo-lateral">
             <h3 className="bb-resumo-titulo">Resumo do Agendamento</h3>
 
             <div className="bb-resumo-item">
-              <span>Serviço</span>
+              <span>Servico</span>
               <strong>
-                {servicoSelecionado
-                  ? servicoSelecionado.nome
-                  : "Não selecionado"}
+                {servicoSelecionado ? servicoSelecionado.nome : "Nao selecionado"}
               </strong>
             </div>
 
@@ -392,22 +635,20 @@ export default function ModeloBarbearia() {
               <span>Data</span>
               <strong>
                 {horaSelecionada
-                  ? `${dias[diaSelecionado].dia}/${dias[diaSelecionado].mes + 1}`
-                  : "Não selecionado"}
+                  ? `${dataSelecionada.getDate()}/${dataSelecionada.getMonth() + 1}`
+                  : "Nao selecionado"}
               </strong>
             </div>
 
             <div className="bb-resumo-item">
-              <span>Horário</span>
-              <strong>{horaSelecionada || "Não selecionado"}</strong>
+              <span>Horario</span>
+              <strong>{horaSelecionada || "Nao selecionado"}</strong>
             </div>
 
             <div className="bb-resumo-item">
               <span>Barbeiro</span>
               <strong>
-                {barbeiroSelecionado
-                  ? barbeiroSelecionado.nome
-                  : "Não selecionado"}
+                {barbeiroSelecionado ? barbeiroSelecionado.nome : "Nao selecionado"}
               </strong>
             </div>
 
@@ -415,7 +656,7 @@ export default function ModeloBarbearia() {
               <label>Tipo de cliente</label>
               <select className="bb-select">
                 <option>Adulto</option>
-                <option>Criança</option>
+                <option>Crianca</option>
               </select>
             </div>
 
@@ -424,13 +665,13 @@ export default function ModeloBarbearia() {
               <select className="bb-select">
                 <option>Pix</option>
                 <option>Dinheiro</option>
-                <option>Cartão Débito</option>
-                <option>Cartão Crédito</option>
+                <option>Cartao Debito</option>
+                <option>Cartao Credito</option>
               </select>
             </div>
 
             <div className="bb-campo">
-              <label>Observação</label>
+              <label>Observacao</label>
               <textarea
                 className="bb-textarea"
                 placeholder="Ex: Deixar mais baixo na lateral..."
@@ -456,3 +697,4 @@ export default function ModeloBarbearia() {
     </div>
   );
 }
+

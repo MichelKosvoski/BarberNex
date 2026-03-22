@@ -154,3 +154,9 @@ input:-webkit-autofill:active {
 .auth-link a:hover {
   text-decoration: underline;
 }
+
+.auth-error {
+  color: #ff9d9d;
+  font-size: 14px;
+  text-align: left;
+}

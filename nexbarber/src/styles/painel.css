@@ -440,6 +440,243 @@
   margin-top: 18px;
 }
 
+.painel-form-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.painel-form-grid input,
+.painel-form-grid textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4f6fb;
+  outline: none;
+}
+
+.painel-form-grid textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.painel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4f6fb;
+}
+
+.painel-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #f6c445;
+}
+
+.painel-color-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.painel-color-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #c3cadb;
+}
+
+.painel-color-grid input[type="color"] {
+  min-height: 54px;
+  padding: 6px;
+}
+
+.painel-preview-card {
+  position: relative;
+  min-height: 320px;
+  margin-top: 18px;
+  border-radius: 24px;
+  overflow: hidden;
+  background-color: var(--preview-bg, #050607);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.painel-preview-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.85)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--preview-primary) 18%, transparent), transparent 28%);
+}
+
+.painel-preview-logo {
+  width: 78px;
+  height: 78px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--preview-primary) 35%, transparent);
+}
+
+.painel-preview-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.painel-preview-overlay h4 {
+  font-size: 1.9rem;
+}
+
+.painel-preview-overlay p {
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 460px;
+}
+
+.painel-preview-overlay button {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  background: var(--preview-primary, #f5c542);
+  color: #111;
+  font-weight: 800;
+}
+
+.painel-form-grid select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4f6fb;
+  outline: none;
+}
+
+.painel-total-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(246, 196, 69, 0.14);
+}
+
+.painel-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.painel-secondary-button,
+.painel-danger-button {
+  border: none;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.painel-secondary-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f6fb;
+}
+
+.painel-danger-button {
+  background: rgba(255, 107, 107, 0.14);
+  color: #ffb4b4;
+}
+
+.painel-service-preview {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 420px;
+}
+
+.painel-service-preview > .service-card,
+.painel-service-preview > .bb-barber-card {
+  width: 100%;
+  max-width: 280px;
+  flex: 0 0 280px;
+}
+
+.painel-servicos-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 280px));
+  gap: 18px;
+  justify-content: start;
+  align-items: start;
+}
+
+.painel-servico-card-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.painel-servico-card-wrap .service-card,
+.painel-servico-card-wrap .bb-barber-card {
+  width: 100%;
+  max-width: 280px;
+}
+
+.painel-servico-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.painel-feedback,
+.painel-empty-state,
+.painel-empty-cell {
+  color: #c4cada;
+}
+
+.painel-feedback {
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.painel-feedback.erro {
+  color: #ffb4b4;
+  border-color: rgba(255, 107, 107, 0.3);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.painel-empty-state {
+  padding: 14px 4px;
+}
+
+.painel-empty-cell {
+  text-align: center !important;
+}
+
 @media (max-width: 1180px) {
   .painel-shell {
     grid-template-columns: 92px 1fr;
@@ -505,7 +742,19 @@
   }
 
   .painel-stats-grid,
-  .painel-settings-grid {
+  .painel-settings-grid,
+  .painel-color-grid {
     grid-template-columns: 1fr;
+  }
+
+  .painel-servicos-grid {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .painel-servico-card-wrap,
+  .painel-service-preview > .service-card,
+  .painel-service-preview > .bb-barber-card {
+    max-width: 100%;
   }
 }

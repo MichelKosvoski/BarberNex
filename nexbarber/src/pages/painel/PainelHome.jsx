@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   FiArrowUpRight,
   FiCalendar,
@@ -6,81 +7,90 @@ import {
   FiTrendingUp,
   FiUsers,
 } from "react-icons/fi";
+import { getPainelBarbeariaId, getResumoPainel } from "../../services/api";
 
-const indicadores = [
-  {
-    titulo: "Agendamentos Hoje",
-    valor: "18",
-    detalhe: "6 confirmados nas proximas 2 horas",
-    icone: FiCalendar,
-    destaque: "blue",
-  },
-  {
-    titulo: "Faturamento Hoje",
-    valor: "R$ 850",
-    detalhe: "R$ 350 acima de ontem",
-    icone: FiDollarSign,
-    destaque: "green",
-  },
-  {
-    titulo: "Clientes Ativos",
-    valor: "124",
-    detalhe: "+5 novos nesta semana",
-    icone: FiUsers,
-    destaque: "gold",
-  },
-  {
-    titulo: "Horarios Livres",
-    valor: "12",
-    detalhe: "Ultimo horario disponivel as 19:30",
-    icone: FiClock,
-    destaque: "default",
-  },
-];
+const iconMap = {
+  "Agendamentos Hoje": FiCalendar,
+  "Faturamento Hoje": FiDollarSign,
+  "Clientes Ativos": FiUsers,
+  "Horarios Livres": FiClock,
+};
 
-const meses = [
-  { label: "Mai", value: 80 },
-  { label: "Jun", value: 180 },
-  { label: "Jul", value: 250 },
-  { label: "Ago", value: 230 },
-  { label: "Set", value: 210 },
-  { label: "Out", value: 240 },
-  { label: "Nov", value: 320 },
-  { label: "Dez", value: 410 },
-  { label: "Jan", value: 690 },
-  { label: "Fev", value: 560 },
-  { label: "Mar", value: 630 },
-  { label: "Abr", value: 720 },
-];
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
 
-const agendamentos = [
-  { cliente: "Joao", servico: "Corte", barbeiro: "Lucas", horario: "14:30" },
-  { cliente: "Maria", servico: "Barba", barbeiro: "Pedro", horario: "15:00" },
-  {
-    cliente: "Carlos",
-    servico: "Corte + Barba",
-    barbeiro: "Andre",
-    horario: "16:00",
-  },
-  {
-    cliente: "Rafael",
-    servico: "Pigmentacao",
-    barbeiro: "Kaique",
-    horario: "17:30",
-  },
-];
+function getChartPoints(series) {
+  if (series.length <= 1) {
+    return "0,80 100,20";
+  }
 
-const barbeirosTop = [
-  { nome: "Claudio Machado", cargo: "Barbeiro master", atendimentos: 32 },
-  { nome: "Pedro Alves", cargo: "Especialista em barba", atendimentos: 27 },
-  { nome: "Lucas Rocha", cargo: "Fade premium", atendimentos: 24 },
-];
+  const max = Math.max(...series.map((item) => Number(item.total || 0)), 1);
 
-const pontos = meses
-  .map((mes, index) => `${(index / (meses.length - 1)) * 100},${100 - mes.value / 8}`)
-  .join(" ");
+  return series
+    .map((item, index) => {
+      const x = (index / (series.length - 1)) * 100;
+      const y = 90 - (Number(item.total || 0) / max) * 70;
+      return `${x},${y}`;
+    })
+    .join(" ");
+}
 
 export default function PainelHome() {
+  const [dados, setDados] = useState(null);
+  const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    const barbeariaId = getPainelBarbeariaId();
+
+    async function carregarResumo() {
+      try {
+        const resposta = await getResumoPainel(barbeariaId);
+        setDados(resposta);
+      } catch (error) {
+        setErro(error.message);
+      }
+    }
+
+    carregarResumo();
+  }, []);
+
+  const indicadoresApi = dados?.indicadores || {};
+  const indicadores = [
+    {
+      titulo: "Agendamentos Hoje",
+      valor: indicadoresApi.agendamentosHoje ?? 0,
+      detalhe: "Agendamentos cadastrados para hoje",
+      destaque: "blue",
+    },
+    {
+      titulo: "Faturamento Hoje",
+      valor: formatCurrency(indicadoresApi.faturamentoHoje),
+      detalhe: "Servicos confirmados e finalizados",
+      destaque: "green",
+    },
+    {
+      titulo: "Clientes Ativos",
+      valor: indicadoresApi.clientesAtivos ?? 0,
+      detalhe: "Clientes cadastrados na base",
+      destaque: "gold",
+    },
+    {
+      titulo: "Horarios Livres",
+      valor: indicadoresApi.horariosLivres ?? 0,
+      detalhe: "Estimativa de disponibilidade do dia",
+      destaque: "default",
+    },
+  ];
+
+  const agendamentos = dados?.agendamentosRecentes || [];
+  const barbeirosTop = dados?.rankingBarbeiros || [];
+  const faturamentoMensal = dados?.faturamentoMensal || [];
+  const pontos = getChartPoints(faturamentoMensal);
+
   return (
     <section className="painel-content">
       <div className="painel-hero">
@@ -95,9 +105,11 @@ export default function PainelHome() {
         </button>
       </div>
 
+      {erro ? <div className="painel-feedback erro">{erro}</div> : null}
+
       <div className="painel-stats-grid">
         {indicadores.map((item) => {
-          const Icon = item.icone;
+          const Icon = iconMap[item.titulo];
 
           return (
             <article
@@ -125,7 +137,7 @@ export default function PainelHome() {
               <h4>Faturamento Mensal</h4>
               <p className="painel-positive-copy">
                 <FiTrendingUp />
-                23% acima do mes anterior
+                Receita confirmada nos ultimos meses
               </p>
             </div>
 
@@ -153,9 +165,11 @@ export default function PainelHome() {
             </svg>
 
             <div className="painel-chart-labels">
-              {meses.map((mes) => (
-                <span key={mes.label}>{mes.label}</span>
-              ))}
+              {faturamentoMensal.length > 0 ? (
+                faturamentoMensal.map((mes) => <span key={mes.mes}>{mes.mes.slice(5)}</span>)
+              ) : (
+                <span>Sem dados</span>
+              )}
             </div>
           </div>
         </section>
@@ -169,17 +183,21 @@ export default function PainelHome() {
           </div>
 
           <div className="painel-mini-list">
-            {agendamentos.slice(0, 3).map((item) => (
-              <div key={`${item.cliente}-${item.horario}`} className="painel-mini-row">
-                <div>
-                  <strong>{item.cliente}</strong>
-                  <span>
-                    {item.servico} com {item.barbeiro}
-                  </span>
+            {agendamentos.length > 0 ? (
+              agendamentos.slice(0, 3).map((item) => (
+                <div key={item.id} className="painel-mini-row">
+                  <div>
+                    <strong>{item.cliente_nome}</strong>
+                    <span>
+                      {item.servico_nome} com {item.barbeiro_nome}
+                    </span>
+                  </div>
+                  <strong>{String(item.hora).slice(0, 5)}</strong>
                 </div>
-                <strong>{item.horario}</strong>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="painel-empty-state">Nenhum agendamento recente.</div>
+            )}
           </div>
         </section>
       </div>
@@ -204,14 +222,22 @@ export default function PainelHome() {
                 </tr>
               </thead>
               <tbody>
-                {agendamentos.map((item) => (
-                  <tr key={`${item.cliente}-${item.horario}`}>
-                    <td>{item.cliente}</td>
-                    <td>{item.servico}</td>
-                    <td>{item.barbeiro}</td>
-                    <td>{item.horario}</td>
+                {agendamentos.length > 0 ? (
+                  agendamentos.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.cliente_nome}</td>
+                      <td>{item.servico_nome}</td>
+                      <td>{item.barbeiro_nome}</td>
+                      <td>{String(item.hora).slice(0, 5)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="painel-empty-cell">
+                      Nenhum agendamento encontrado.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -226,22 +252,26 @@ export default function PainelHome() {
           </div>
 
           <div className="painel-ranking-list">
-            {barbeirosTop.map((barbeiro, index) => (
-              <article key={barbeiro.nome} className="painel-ranking-card">
-                <div className="painel-ranking-avatar">{barbeiro.nome.charAt(0)}</div>
+            {barbeirosTop.length > 0 ? (
+              barbeirosTop.map((barbeiro, index) => (
+                <article key={barbeiro.id} className="painel-ranking-card">
+                  <div className="painel-ranking-avatar">{barbeiro.nome.charAt(0)}</div>
 
-                <div className="painel-ranking-copy">
-                  <strong>
-                    #{index + 1} {barbeiro.nome}
+                  <div className="painel-ranking-copy">
+                    <strong>
+                      #{index + 1} {barbeiro.nome}
+                    </strong>
+                    <span>{barbeiro.especialidade || "Equipe ativa"}</span>
+                  </div>
+
+                  <strong className="painel-ranking-total">
+                    {barbeiro.atendimentos} atend.
                   </strong>
-                  <span>{barbeiro.cargo}</span>
-                </div>
-
-                <strong className="painel-ranking-total">
-                  {barbeiro.atendimentos} atend.
-                </strong>
-              </article>
-            ))}
+                </article>
+              ))
+            ) : (
+              <div className="painel-empty-state">Nenhum barbeiro cadastrado.</div>
+            )}
           </div>
         </section>
       </div>

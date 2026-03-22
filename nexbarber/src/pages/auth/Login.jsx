@@ -1,16 +1,40 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
+import { loginUser, setSessionUser } from "../../services/api";
 import "../../styles/auth.css";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [loginType, setLoginType] = useState("email");
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ loginType, login, password });
+    setError("");
+    setLoading(true);
+
+    try {
+      const resposta = await loginUser({
+        login,
+        senha: password,
+      });
+
+      setSessionUser(resposta.user);
+
+      if (resposta.user.tipo === "dono" || resposta.user.tipo === "funcionario") {
+        navigate("/painel");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePhoneChange = (e) => {
@@ -83,13 +107,15 @@ export default function Login() {
             required
           />
 
-          <button type="submit" className="primary-btn">
-            Entrar
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          <button type="submit" className="primary-btn" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
         <p className="auth-link">
-          Não tem conta? <Link to="/register">Criar conta</Link>
+          Nao tem conta? <Link to="/register">Criar conta</Link>
         </p>
       </div>
     </div>

@@ -8,5 +8,7 @@ router.post("/", controller.criarAgendamento);
 
 // Listar agendamentos da barbearia
 router.get("/barbearia/:id", controller.listarAgendamentos);
+router.patch("/:id/status", controller.atualizarStatusAgendamento);
+router.delete("/:id", controller.removerAgendamento);
 
 module.exports = router;

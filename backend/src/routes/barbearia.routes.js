@@ -18,6 +18,7 @@ router.get("/", controller.listarBarbearias);
   GET /api/barbearias/1
 */
 router.get("/:id", controller.buscarBarbeariaPorId);
+router.put("/:id", controller.atualizarBarbearia);
 
 /*
   ROTA:

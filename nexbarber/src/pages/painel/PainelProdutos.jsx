@@ -1,11 +1,34 @@
-const produtos = [
-  { nome: "Pomada modeladora", estoque: "18 un", preco: "R$ 39" },
-  { nome: "Oleo para barba", estoque: "11 un", preco: "R$ 45" },
-  { nome: "Shampoo masculino", estoque: "24 un", preco: "R$ 32" },
-  { nome: "Kit premium", estoque: "7 un", preco: "R$ 99" },
-];
+import { useEffect, useState } from "react";
+import { getPainelBarbeariaId, getProdutosPainel } from "../../services/api";
+
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
 
 export default function PainelProdutos() {
+  const [produtos, setProdutos] = useState([]);
+  const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    const barbeariaId = getPainelBarbeariaId();
+
+    async function carregarProdutos() {
+      try {
+        const data = await getProdutosPainel(barbeariaId);
+        setProdutos(data);
+      } catch (error) {
+        setErro(error.message);
+      }
+    }
+
+    carregarProdutos();
+  }, []);
+
+  const produtosBaixoEstoque = produtos.filter((produto) => Number(produto.estoque) <= 5);
+
   return (
     <section className="painel-content">
       <div className="painel-hero painel-hero-compact">
@@ -14,6 +37,8 @@ export default function PainelProdutos() {
           <h3>Controle estoque, itens premium e produtos de giro rapido.</h3>
         </div>
       </div>
+
+      {erro ? <div className="painel-feedback erro">{erro}</div> : null}
 
       <div className="painel-section-grid">
         <article className="painel-card">
@@ -25,15 +50,19 @@ export default function PainelProdutos() {
           </div>
 
           <div className="painel-list-grid">
-            {produtos.map((produto) => (
-              <div key={produto.nome} className="painel-list-item">
-                <div>
-                  <strong>{produto.nome}</strong>
-                  <span>{produto.estoque}</span>
+            {produtos.length > 0 ? (
+              produtos.map((produto) => (
+                <div key={produto.id} className="painel-list-item">
+                  <div>
+                    <strong>{produto.nome}</strong>
+                    <span>{produto.estoque} un</span>
+                  </div>
+                  <strong>{formatCurrency(produto.preco)}</strong>
                 </div>
-                <strong>{produto.preco}</strong>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="painel-empty-state">Nenhum produto cadastrado.</div>
+            )}
           </div>
         </article>
 
@@ -46,9 +75,15 @@ export default function PainelProdutos() {
           </div>
 
           <div className="painel-tag-grid">
-            <span className="painel-tag">Navalha premium - 4 un</span>
-            <span className="painel-tag">Balm pos-barba - 3 un</span>
-            <span className="painel-tag">Kit premium - 7 un</span>
+            {produtosBaixoEstoque.length > 0 ? (
+              produtosBaixoEstoque.map((produto) => (
+                <span key={produto.id} className="painel-tag">
+                  {produto.nome} - {produto.estoque} un
+                </span>
+              ))
+            ) : (
+              <div className="painel-empty-state">Sem alertas de estoque baixo.</div>
+            )}
           </div>
         </article>
       </div>

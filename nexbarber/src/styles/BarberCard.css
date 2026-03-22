@@ -1,4 +1,8 @@
 .bb-barber-card {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
   background: #33333300;
   border-radius: 18px;
   overflow: hidden;
@@ -11,11 +15,17 @@
   transform: translateY(-8px);
 }
 
+.bb-barber-card.is-selected {
+  outline: 2px solid #facc15;
+  box-shadow: 0 14px 42px rgba(250, 204, 21, 0.2);
+}
+
 /* ===== IMAGEM ===== */
 
 .bb-barber-img-wrapper {
   position: relative;
-  height: 320px;
+  width: 100%;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
 }
 
@@ -67,6 +77,7 @@
 /* ===== FOOTER ===== */
 
 .bb-barber-footer {
+  margin-top: auto;
   padding: 18px;
   background: linear-gradient(145deg, #19191a94, #161616a2);
   display: flex;

@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
+import { registerUser, setSessionUser } from "../../services/api";
 import "../../styles/auth.css";
 import "../../styles/register.css";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [type, setType] = useState("cliente");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,7 +27,6 @@ export default function Register() {
     });
   };
 
-  // Máscara telefone
   const handlePhoneChange = (e) => {
     const value = e.target.value
       .replace(/\D/g, "")
@@ -37,7 +40,6 @@ export default function Register() {
     });
   };
 
-  // Máscara CPF
   const handleCpfChange = (e) => {
     const value = e.target.value
       .replace(/\D/g, "")
@@ -52,15 +54,34 @@ export default function Register() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("As senhas não coincidem");
+      setError("As senhas nao coincidem");
       return;
     }
 
-    console.log("Cadastro cliente:", formData);
+    setLoading(true);
+
+    try {
+      const resposta = await registerUser({
+        nome: formData.name,
+        email: formData.email,
+        telefone: formData.phone,
+        cpf: formData.cpf,
+        senha: formData.password,
+        tipo: "cliente",
+      });
+
+      setSessionUser(resposta.user);
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openWhatsApp = () => {
@@ -79,7 +100,6 @@ export default function Register() {
 
         <h3>Criar sua conta</h3>
 
-        {/* Toggle Tipo */}
         <div className="toggle-login">
           <button
             type="button"
@@ -133,7 +153,6 @@ export default function Register() {
               placeholder="Seu CPF"
               value={formData.cpf}
               onChange={handleCpfChange}
-              required
             />
 
             <input
@@ -154,8 +173,10 @@ export default function Register() {
               required
             />
 
-            <button type="submit" className="primary-btn">
-              Criar conta
+            {error ? <p className="auth-error">{error}</p> : null}
+
+            <button type="submit" className="primary-btn" disabled={loading}>
+              {loading ? "Criando..." : "Criar conta"}
             </button>
           </form>
         ) : (
@@ -171,7 +192,7 @@ export default function Register() {
         )}
 
         <p className="auth-link">
-          Já tem conta? <Link to="/">Entrar</Link>
+          Ja tem conta? <Link to="/login">Entrar</Link>
         </p>
       </div>
     </div>

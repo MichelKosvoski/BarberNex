@@ -1,13 +1,29 @@
-const colunas = ["Horario", "Cliente", "Servico", "Barbeiro", "Status"];
+import { useEffect, useState } from "react";
+import { getAgendamentosPainel, getPainelBarbeariaId } from "../../services/api";
 
-const linhas = [
-  ["09:00", "Marcos", "Corte", "Lucas", "Confirmado"],
-  ["10:30", "Thiago", "Barba", "Pedro", "Em atendimento"],
-  ["13:30", "Renan", "Corte + Barba", "Andre", "Aguardando"],
-  ["15:00", "Felipe", "Sobrancelha", "Kaique", "Confirmado"],
-];
+function contarStatus(lista, status) {
+  return lista.filter((item) => item.status === status).length;
+}
 
 export default function PainelAgenda() {
+  const [agendamentos, setAgendamentos] = useState([]);
+  const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    const barbeariaId = getPainelBarbeariaId();
+
+    async function carregarAgendamentos() {
+      try {
+        const data = await getAgendamentosPainel(barbeariaId);
+        setAgendamentos(data);
+      } catch (error) {
+        setErro(error.message);
+      }
+    }
+
+    carregarAgendamentos();
+  }, []);
+
   return (
     <section className="painel-content">
       <div className="painel-hero painel-hero-compact">
@@ -16,6 +32,8 @@ export default function PainelAgenda() {
           <h3>Controle os atendimentos do dia, encaixes e confirmacoes.</h3>
         </div>
       </div>
+
+      {erro ? <div className="painel-feedback erro">{erro}</div> : null}
 
       <div className="painel-section-grid">
         <article className="painel-card">
@@ -29,15 +47,15 @@ export default function PainelAgenda() {
           <div className="painel-info-stack">
             <div className="painel-info-pill">
               <span>Agendados</span>
-              <strong>18</strong>
+              <strong>{agendamentos.length}</strong>
             </div>
             <div className="painel-info-pill">
-              <span>Em atendimento</span>
-              <strong>4</strong>
+              <span>Confirmados</span>
+              <strong>{contarStatus(agendamentos, "confirmado")}</strong>
             </div>
             <div className="painel-info-pill">
-              <span>Livres</span>
-              <strong>12</strong>
+              <span>Finalizados</span>
+              <strong>{contarStatus(agendamentos, "finalizado")}</strong>
             </div>
           </div>
         </article>
@@ -45,16 +63,16 @@ export default function PainelAgenda() {
         <article className="painel-card">
           <div className="painel-card-header">
             <div>
-              <h4>Horarios de pico</h4>
-              <p>Melhor distribuicao da equipe</p>
+              <h4>Status do dia</h4>
+              <p>Leitura rapida da agenda</p>
             </div>
           </div>
 
           <div className="painel-tag-grid">
-            <span className="painel-tag">09:00 - lotado</span>
-            <span className="painel-tag">13:30 - alto fluxo</span>
-            <span className="painel-tag">16:00 - alto fluxo</span>
-            <span className="painel-tag">19:30 - ultima vaga</span>
+            <span className="painel-tag">Agendado: {contarStatus(agendamentos, "agendado")}</span>
+            <span className="painel-tag">Confirmado: {contarStatus(agendamentos, "confirmado")}</span>
+            <span className="painel-tag">Finalizado: {contarStatus(agendamentos, "finalizado")}</span>
+            <span className="painel-tag">Cancelado: {contarStatus(agendamentos, "cancelado")}</span>
           </div>
         </article>
       </div>
@@ -71,19 +89,31 @@ export default function PainelAgenda() {
           <table className="painel-table">
             <thead>
               <tr>
-                {colunas.map((coluna) => (
-                  <th key={coluna}>{coluna}</th>
-                ))}
+                <th>Horario</th>
+                <th>Cliente</th>
+                <th>Servico</th>
+                <th>Barbeiro</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {linhas.map((linha) => (
-                <tr key={linha.join("-")}>
-                  {linha.map((celula) => (
-                    <td key={celula}>{celula}</td>
-                  ))}
+              {agendamentos.length > 0 ? (
+                agendamentos.map((item) => (
+                  <tr key={item.id}>
+                    <td>{String(item.hora).slice(0, 5)}</td>
+                    <td>{item.cliente_nome}</td>
+                    <td>{item.servico_nome}</td>
+                    <td>{item.barbeiro_nome}</td>
+                    <td>{item.status}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="painel-empty-cell">
+                    Nenhum agendamento encontrado.
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

@@ -12,6 +12,10 @@ import PainelServicos from "./pages/painel/PainelServicos";
 import PainelProdutos from "./pages/painel/PainelProdutos";
 import PainelRelatorios from "./pages/painel/PainelRelatorios";
 import PainelConfiguracoes from "./pages/painel/PainelConfiguracoes";
+import PainelPersonalizar from "./pages/painel/PainelPersonalizar";
+import PainelAssinaturas from "./pages/painel/PainelAssinaturas";
+import PainelPdv from "./pages/painel/PainelPdv";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -21,7 +25,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/barbearia/:id" element={<ModeloBarbearia />} />
-        <Route path="/painel" element={<PainelLayout />}>
+        <Route
+          path="/painel"
+          element={
+            <ProtectedRoute allow={["dono", "funcionario"]}>
+              <PainelLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<PainelHome />} />
           <Route path="agenda" element={<PainelAgenda />} />
           <Route path="clientes" element={<PainelClientes />} />
@@ -29,6 +40,9 @@ function App() {
           <Route path="servicos" element={<PainelServicos />} />
           <Route path="produtos" element={<PainelProdutos />} />
           <Route path="relatorios" element={<PainelRelatorios />} />
+          <Route path="assinaturas" element={<PainelAssinaturas />} />
+          <Route path="pdv" element={<PainelPdv />} />
+          <Route path="personalizar" element={<PainelPersonalizar />} />
           <Route path="configuracoes" element={<PainelConfiguracoes />} />
         </Route>
         <Route path="/dashboard" element={<Navigate to="/painel" replace />} />
