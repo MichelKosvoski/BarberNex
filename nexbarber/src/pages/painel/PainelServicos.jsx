@@ -32,6 +32,7 @@ export default function PainelServicos() {
   const [feedback, setFeedback] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [arquivoImagemNome, setArquivoImagemNome] = useState("");
 
   const barbeariaId = getPainelBarbeariaId();
 
@@ -70,6 +71,7 @@ export default function PainelServicos() {
 
       setForm(emptyForm);
       setEditingId(null);
+      setArquivoImagemNome("");
       await carregarServicos();
     } catch (error) {
       setErro(error.message);
@@ -87,6 +89,7 @@ export default function PainelServicos() {
       imagem: servico.imagem || "",
       status: servico.status || "ativo",
     });
+    setArquivoImagemNome("");
   };
 
   const handleDelete = async (id) => {
@@ -151,20 +154,33 @@ export default function PainelServicos() {
             />
 
             <input
+              id="upload-servico-imagem"
+              className="painel-file-input"
               type="file"
               accept="image/*"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 const dataUrl = await fileToDataUrl(file);
+                setArquivoImagemNome(file?.name || "");
                 setForm((prev) => ({ ...prev, imagem: dataUrl }));
               }}
             />
+
+            <label htmlFor="upload-servico-imagem" className="painel-file-picker">
+              <span className="painel-file-button">Escolher imagem</span>
+              <span className="painel-file-name">
+                {arquivoImagemNome || (form.imagem ? "Imagem carregada" : "Nenhum arquivo escolhido")}
+              </span>
+            </label>
 
             <div className="painel-actions-row">
               <button
                 className="painel-secondary-button"
                 type="button"
-                onClick={() => setForm((prev) => ({ ...prev, imagem: "" }))}
+                onClick={() => {
+                  setArquivoImagemNome("");
+                  setForm((prev) => ({ ...prev, imagem: "" }));
+                }}
               >
                 Remover imagem
               </button>
@@ -194,6 +210,7 @@ export default function PainelServicos() {
                   type="button"
                   onClick={() => {
                     setEditingId(null);
+                    setArquivoImagemNome("");
                     setForm(emptyForm);
                   }}
                 >

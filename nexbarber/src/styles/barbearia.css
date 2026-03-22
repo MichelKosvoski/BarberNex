@@ -352,6 +352,95 @@
   filter: brightness(1.03);
 }
 
+.bb-planos-showcase {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 22px;
+  align-items: start;
+  padding: 26px 28px 10px;
+}
+
+.bb-planos-showcase-copy {
+  padding: 20px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(245, 197, 66, 0.1), transparent 28%),
+    rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+}
+
+.bb-planos-showcase-copy h2 {
+  margin: 8px 0 12px;
+  color: var(--gold);
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.bb-planos-showcase-copy p:last-child {
+  font-size: 0.98rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+}
+
+.bb-planos-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+  gap: 18px;
+  justify-content: start;
+}
+
+.bb-plano-card-compact {
+  min-height: 100%;
+  max-width: 320px;
+  padding: 18px;
+  border-radius: 18px;
+  gap: 12px;
+}
+
+.bb-plano-card-compact .bb-plano-descricao {
+  display: none;
+}
+
+.bb-plano-card-compact h3 {
+  font-size: 1.05rem;
+}
+
+.bb-plano-card-compact .bb-plano-tag {
+  padding: 6px 10px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.bb-plano-card-compact .bb-plano-preco {
+  gap: 6px;
+  align-items: baseline;
+}
+
+.bb-plano-card-compact .bb-plano-preco strong {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.bb-plano-card-compact .bb-plano-preco span {
+  font-size: 0.9rem;
+}
+
+.bb-plano-card-compact .bb-plano-benefits {
+  gap: 8px;
+}
+
+.bb-plano-card-compact .bb-plano-benefit {
+  font-size: 0.92rem;
+}
+
+.bb-plano-card-compact .bb-plano-btn {
+  width: fit-content;
+  min-width: 160px;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
 /* ================= AGENDAMENTO GRID ================= */
 .bb-grid2 {
   display: grid;
@@ -797,6 +886,10 @@
 }
 
 @media (max-width: 1100px) {
+  .bb-planos-showcase {
+    grid-template-columns: 1fr;
+  }
+
   .bb-barbeiros-layout {
     grid-template-columns: 1fr;
   }
@@ -830,13 +923,15 @@
 
   .bb-cardsGrid,
   .bb-barbeiros-grid,
-  .bb-planos-grid {
+  .bb-planos-grid,
+  .bb-planos-showcase-grid {
     grid-template-columns: 1fr;
   }
 
   .bb-cardsGrid > *,
   .bb-barbeiros-grid > *,
-  .bb-planos-grid > * {
+  .bb-planos-grid > *,
+  .bb-planos-showcase-grid > * {
     max-width: 100%;
     justify-self: stretch;
   }

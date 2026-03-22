@@ -4,17 +4,16 @@ import {
   FiCalendar,
   FiClock,
   FiDollarSign,
+  FiTrendingDown,
   FiTrendingUp,
   FiUsers,
 } from "react-icons/fi";
-import { getPainelBarbeariaId, getResumoPainel } from "../../services/api";
-
-const iconMap = {
-  "Agendamentos Hoje": FiCalendar,
-  "Faturamento Hoje": FiDollarSign,
-  "Clientes Ativos": FiUsers,
-  "Horarios Livres": FiClock,
-};
+import {
+  createDespesa,
+  deleteDespesa,
+  getPainelBarbeariaId,
+  getResumoPainel,
+} from "../../services/api";
 
 function formatCurrency(value) {
   return Number(value || 0).toLocaleString("pt-BR", {
@@ -23,38 +22,49 @@ function formatCurrency(value) {
   });
 }
 
-function getChartPoints(series) {
+function getChartPoints(series, key) {
   if (series.length <= 1) {
     return "0,80 100,20";
   }
 
-  const max = Math.max(...series.map((item) => Number(item.total || 0)), 1);
+  const max = Math.max(...series.map((item) => Number(item[key] || 0)), 1);
 
   return series
     .map((item, index) => {
       const x = (index / (series.length - 1)) * 100;
-      const y = 90 - (Number(item.total || 0) / max) * 70;
+      const y = 90 - (Number(item[key] || 0) / max) * 70;
       return `${x},${y}`;
     })
     .join(" ");
 }
 
+const initialDespesa = {
+  titulo: "",
+  categoria: "Energia",
+  valor: "",
+  competencia: "",
+  observacoes: "",
+};
+
 export default function PainelHome() {
   const [dados, setDados] = useState(null);
   const [erro, setErro] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [salvandoDespesa, setSalvandoDespesa] = useState(false);
+  const [formDespesa, setFormDespesa] = useState(initialDespesa);
+
+  const barbeariaId = getPainelBarbeariaId();
+
+  async function carregarResumo() {
+    try {
+      const resposta = await getResumoPainel(barbeariaId);
+      setDados(resposta);
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
 
   useEffect(() => {
-    const barbeariaId = getPainelBarbeariaId();
-
-    async function carregarResumo() {
-      try {
-        const resposta = await getResumoPainel(barbeariaId);
-        setDados(resposta);
-      } catch (error) {
-        setErro(error.message);
-      }
-    }
-
     carregarResumo();
   }, []);
 
@@ -63,40 +73,98 @@ export default function PainelHome() {
     {
       titulo: "Agendamentos Hoje",
       valor: indicadoresApi.agendamentosHoje ?? 0,
-      detalhe: "Agendamentos cadastrados para hoje",
+      detalhe: "Agenda prevista para hoje",
       destaque: "blue",
+      icon: FiCalendar,
     },
     {
-      titulo: "Faturamento Hoje",
+      titulo: "Entradas Hoje",
       valor: formatCurrency(indicadoresApi.faturamentoHoje),
-      detalhe: "Servicos confirmados e finalizados",
+      detalhe: "Receita confirmada do dia",
       destaque: "green",
+      icon: FiDollarSign,
+    },
+    {
+      titulo: "Saidas Hoje",
+      valor: formatCurrency(indicadoresApi.saidasHoje),
+      detalhe: "Contas e custos lancados hoje",
+      destaque: "danger",
+      icon: FiTrendingDown,
+    },
+    {
+      titulo: "Lucro Liquido",
+      valor: formatCurrency(indicadoresApi.lucroLiquidoHoje),
+      detalhe: "Entradas menos saidas do dia",
+      destaque: "gold",
+      icon: FiTrendingUp,
     },
     {
       titulo: "Clientes Ativos",
       valor: indicadoresApi.clientesAtivos ?? 0,
       detalhe: "Clientes cadastrados na base",
-      destaque: "gold",
+      destaque: "default",
+      icon: FiUsers,
     },
     {
       titulo: "Horarios Livres",
       valor: indicadoresApi.horariosLivres ?? 0,
-      detalhe: "Estimativa de disponibilidade do dia",
+      detalhe: "Disponibilidade estimada",
       destaque: "default",
+      icon: FiClock,
     },
   ];
 
   const agendamentos = dados?.agendamentosRecentes || [];
   const barbeirosTop = dados?.rankingBarbeiros || [];
   const faturamentoMensal = dados?.faturamentoMensal || [];
-  const pontos = getChartPoints(faturamentoMensal);
+  const despesasRecentes = dados?.despesasRecentes || [];
+  const pontosEntradas = getChartPoints(faturamentoMensal, "entradas");
+  const pontosLiquido = getChartPoints(faturamentoMensal, "liquido");
+
+  const salvarDespesa = async (e) => {
+    e.preventDefault();
+
+    try {
+      setErro("");
+      setFeedback("");
+      setSalvandoDespesa(true);
+
+      await createDespesa(barbeariaId, {
+        titulo: formDespesa.titulo,
+        categoria: formDespesa.categoria,
+        valor: Number(formDespesa.valor || 0),
+        competencia: formDespesa.competencia || null,
+        observacoes: formDespesa.observacoes,
+      });
+
+      setFormDespesa(initialDespesa);
+      setFeedback("Saida cadastrada com sucesso.");
+      await carregarResumo();
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setSalvandoDespesa(false);
+    }
+  };
+
+  const removerDespesaRapida = async (id) => {
+    try {
+      setErro("");
+      setFeedback("");
+      await deleteDespesa(id);
+      setFeedback("Saida removida com sucesso.");
+      await carregarResumo();
+    } catch (error) {
+      setErro(error.message);
+    }
+  };
 
   return (
     <section className="painel-content">
       <div className="painel-hero">
         <div>
           <p className="painel-eyebrow">Painel Administrativo</p>
-          <h3>Bem-vindo de volta. Aqui estao os dados gerais da barbearia.</h3>
+          <h3>Veja entradas, saidas e lucro do dia sem perder o controle financeiro da barbearia.</h3>
         </div>
 
         <button className="painel-primary-button" type="button">
@@ -106,10 +174,11 @@ export default function PainelHome() {
       </div>
 
       {erro ? <div className="painel-feedback erro">{erro}</div> : null}
+      {feedback ? <div className="painel-feedback">{feedback}</div> : null}
 
-      <div className="painel-stats-grid">
+      <div className="painel-stats-grid painel-stats-grid-6">
         {indicadores.map((item) => {
-          const Icon = iconMap[item.titulo];
+          const Icon = item.icon;
 
           return (
             <article
@@ -134,10 +203,10 @@ export default function PainelHome() {
         <section className="painel-card painel-chart-card">
           <div className="painel-card-header">
             <div>
-              <h4>Faturamento Mensal</h4>
+              <h4>Entradas x Lucro Mensal</h4>
               <p className="painel-positive-copy">
                 <FiTrendingUp />
-                Receita confirmada nos ultimos meses
+                Acompanhe o caixa e o lucro liquido dos ultimos meses
               </p>
             </div>
 
@@ -149,20 +218,36 @@ export default function PainelHome() {
           <div className="painel-chart-shell">
             <svg viewBox="0 0 100 100" className="painel-chart-svg" preserveAspectRatio="none">
               <defs>
-                <linearGradient id="chartStroke" x1="0%" x2="100%" y1="0%" y2="0%">
+                <linearGradient id="chartStrokeEntradas" x1="0%" x2="100%" y1="0%" y2="0%">
                   <stop offset="0%" stopColor="#6ca8ff" />
                   <stop offset="100%" stopColor="#f6c445" />
+                </linearGradient>
+                <linearGradient id="chartStrokeLiquido" x1="0%" x2="100%" y1="0%" y2="0%">
+                  <stop offset="0%" stopColor="#75f0af" />
+                  <stop offset="100%" stopColor="#6ca8ff" />
                 </linearGradient>
               </defs>
 
               <polyline
                 className="painel-chart-line"
                 fill="none"
-                stroke="url(#chartStroke)"
+                stroke="url(#chartStrokeEntradas)"
                 strokeWidth="2"
-                points={pontos}
+                points={pontosEntradas}
+              />
+              <polyline
+                className="painel-chart-line painel-chart-line-secondary"
+                fill="none"
+                stroke="url(#chartStrokeLiquido)"
+                strokeWidth="2"
+                points={pontosLiquido}
               />
             </svg>
+
+            <div className="painel-chart-legend">
+              <span><i className="is-entradas" /> Entradas</span>
+              <span><i className="is-liquido" /> Liquido</span>
+            </div>
 
             <div className="painel-chart-labels">
               {faturamentoMensal.length > 0 ? (
@@ -177,6 +262,83 @@ export default function PainelHome() {
         <section className="painel-card">
           <div className="painel-card-header">
             <div>
+              <h4>Lancar saida</h4>
+              <p>Energia, funcionarios, reposicao e contas do dia a dia</p>
+            </div>
+          </div>
+
+          <form className="painel-form-grid" onSubmit={salvarDespesa}>
+            <label className="painel-field">
+              <span>Titulo</span>
+              <input
+                value={formDespesa.titulo}
+                onChange={(e) => setFormDespesa((prev) => ({ ...prev, titulo: e.target.value }))}
+                placeholder="Ex: Conta de energia"
+                required
+              />
+            </label>
+
+            <label className="painel-field">
+              <span>Categoria</span>
+              <select
+                value={formDespesa.categoria}
+                onChange={(e) => setFormDespesa((prev) => ({ ...prev, categoria: e.target.value }))}
+              >
+                <option>Energia</option>
+                <option>Funcionarios</option>
+                <option>Produtos</option>
+                <option>Aluguel</option>
+                <option>Internet</option>
+                <option>Marketing</option>
+                <option>Outros</option>
+              </select>
+            </label>
+
+            <label className="painel-field">
+              <span>Valor</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formDespesa.valor}
+                onChange={(e) => setFormDespesa((prev) => ({ ...prev, valor: e.target.value }))}
+                placeholder="0,00"
+                required
+              />
+            </label>
+
+            <label className="painel-field">
+              <span>Competencia</span>
+              <input
+                type="date"
+                value={formDespesa.competencia}
+                onChange={(e) => setFormDespesa((prev) => ({ ...prev, competencia: e.target.value }))}
+              />
+            </label>
+
+            <label className="painel-field painel-field-full">
+              <span>Observacoes</span>
+              <textarea
+                rows="4"
+                value={formDespesa.observacoes}
+                onChange={(e) => setFormDespesa((prev) => ({ ...prev, observacoes: e.target.value }))}
+                placeholder="Ex: parcela, fornecedor, repasse..."
+              />
+            </label>
+
+            <div className="painel-form-actions">
+              <button type="submit" className="painel-primary-button" disabled={salvandoDespesa}>
+                {salvandoDespesa ? "Salvando..." : "Adicionar saida"}
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <div className="painel-grid painel-grid-secondary">
+        <section className="painel-card">
+          <div className="painel-card-header">
+            <div>
               <h4>Agendamentos Recentes</h4>
               <p>Movimento do caixa e da agenda</p>
             </div>
@@ -184,7 +346,7 @@ export default function PainelHome() {
 
           <div className="painel-mini-list">
             {agendamentos.length > 0 ? (
-              agendamentos.slice(0, 3).map((item) => (
+              agendamentos.slice(0, 4).map((item) => (
                 <div key={item.id} className="painel-mini-row">
                   <div>
                     <strong>{item.cliente_nome}</strong>
@@ -197,6 +359,40 @@ export default function PainelHome() {
               ))
             ) : (
               <div className="painel-empty-state">Nenhum agendamento recente.</div>
+            )}
+          </div>
+        </section>
+
+        <section className="painel-card">
+          <div className="painel-card-header">
+            <div>
+              <h4>Saidas Recentes</h4>
+              <p>Contas e despesas registradas no caixa</p>
+            </div>
+          </div>
+
+          <div className="painel-mini-list">
+            {despesasRecentes.length > 0 ? (
+              despesasRecentes.map((despesa) => (
+                <div key={despesa.id} className="painel-mini-row">
+                  <div>
+                    <strong>{despesa.titulo}</strong>
+                    <span>{despesa.categoria || "Sem categoria"}</span>
+                  </div>
+                  <div className="painel-table-actions">
+                    <strong>{formatCurrency(despesa.valor)}</strong>
+                    <button
+                      type="button"
+                      className="painel-table-btn is-danger-outline"
+                      onClick={() => removerDespesaRapida(despesa.id)}
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="painel-empty-state">Nenhuma saida registrada.</div>
             )}
           </div>
         </section>

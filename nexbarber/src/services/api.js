@@ -85,12 +85,84 @@ export async function getResumoPainel(barbeariaId) {
   return fetchJson(`${API_URL}/painel/${barbeariaId}/resumo`);
 }
 
+export async function getDespesasPainel(barbeariaId) {
+  return fetchJson(`${API_URL}/despesas/barbearia/${barbeariaId}`);
+}
+
+export async function createDespesa(barbeariaId, payload) {
+  return fetchJson(`${API_URL}/despesas/barbearia/${barbeariaId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDespesa(id) {
+  return fetchJson(`${API_URL}/despesas/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getAgendamentosPainel(barbeariaId) {
   return fetchJson(`${API_URL}/agendamentos/barbearia/${barbeariaId}`);
 }
 
+export async function updateAgendamento(id, payload) {
+  return fetchJson(`${API_URL}/agendamentos/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAgendamentoStatus(id, status) {
+  return fetchJson(`${API_URL}/agendamentos/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function deleteAgendamento(id) {
+  return fetchJson(`${API_URL}/agendamentos/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getClientesPainel(barbeariaId) {
   return fetchJson(`${API_URL}/clientes/barbearia/${barbeariaId}`);
+}
+
+export async function createCliente(barbeariaId, payload) {
+  return fetchJson(`${API_URL}/clientes/barbearia/${barbeariaId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCliente(id, payload) {
+  return fetchJson(`${API_URL}/clientes/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCliente(id) {
+  return fetchJson(`${API_URL}/clientes/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export async function getBarbeirosPainel(barbeariaId) {
@@ -155,6 +227,32 @@ export async function deleteServico(id) {
 
 export async function getProdutosPainel(barbeariaId) {
   return fetchJson(`${API_URL}/produtos/barbearia/${barbeariaId}`);
+}
+
+export async function createProduto(barbeariaId, payload) {
+  return fetchJson(`${API_URL}/produtos/barbearia/${barbeariaId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateProduto(id, payload) {
+  return fetchJson(`${API_URL}/produtos/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteProduto(id) {
+  return fetchJson(`${API_URL}/produtos/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export async function updateBarbearia(id, payload) {

@@ -196,6 +196,24 @@ async function ensurePdvVendaItensTable() {
   `);
 }
 
+async function ensureDespesasTable() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS despesas (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      barbearia_id INT NOT NULL,
+      titulo VARCHAR(120) NOT NULL,
+      categoria VARCHAR(80) NULL,
+      valor DECIMAL(10,2) NOT NULL DEFAULT 0,
+      competencia DATE NULL,
+      observacoes TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_despesas_barbearia
+        FOREIGN KEY (barbearia_id) REFERENCES barbearias(id)
+        ON DELETE CASCADE
+    )
+  `);
+}
+
 async function ensureServicosCustomizationColumns() {
   const [columns] = await db.query("SHOW COLUMNS FROM servicos");
   const columnNames = new Set(columns.map((column) => column.Field));
@@ -225,6 +243,7 @@ async function ensureSchema() {
   await ensureClientesAssinaturasTable();
   await ensurePdvVendasTable();
   await ensurePdvVendaItensTable();
+  await ensureDespesasTable();
 }
 
 module.exports = ensureSchema;

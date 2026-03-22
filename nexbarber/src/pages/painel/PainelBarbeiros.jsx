@@ -24,6 +24,7 @@ export default function PainelBarbeiros() {
   const [feedback, setFeedback] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [arquivoFotoNome, setArquivoFotoNome] = useState("");
 
   const barbeariaId = getPainelBarbeariaId();
 
@@ -63,6 +64,7 @@ export default function PainelBarbeiros() {
 
       setForm(emptyForm);
       setEditingId(null);
+      setArquivoFotoNome("");
       await carregarBarbeiros();
     } catch (error) {
       setErro(error.message);
@@ -79,6 +81,7 @@ export default function PainelBarbeiros() {
       foto: barbeiro.foto || "",
       status: barbeiro.status || "ativo",
     });
+    setArquivoFotoNome("");
   };
 
   const handleDelete = async (id) => {
@@ -143,20 +146,33 @@ export default function PainelBarbeiros() {
             />
 
             <input
+              id="upload-barbeiro-foto"
+              className="painel-file-input"
               type="file"
               accept="image/*"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 const dataUrl = await fileToDataUrl(file);
+                setArquivoFotoNome(file?.name || "");
                 setForm((prev) => ({ ...prev, foto: dataUrl }));
               }}
             />
+
+            <label htmlFor="upload-barbeiro-foto" className="painel-file-picker">
+              <span className="painel-file-button">Escolher foto</span>
+              <span className="painel-file-name">
+                {arquivoFotoNome || (form.foto ? "Foto carregada" : "Nenhum arquivo escolhido")}
+              </span>
+            </label>
 
             <div className="painel-actions-row">
               <button
                 className="painel-secondary-button"
                 type="button"
-                onClick={() => setForm((prev) => ({ ...prev, foto: "" }))}
+                onClick={() => {
+                  setArquivoFotoNome("");
+                  setForm((prev) => ({ ...prev, foto: "" }));
+                }}
               >
                 Remover foto
               </button>
@@ -180,6 +196,7 @@ export default function PainelBarbeiros() {
                   type="button"
                   onClick={() => {
                     setEditingId(null);
+                    setArquivoFotoNome("");
                     setForm(emptyForm);
                   }}
                 >

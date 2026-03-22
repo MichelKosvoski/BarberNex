@@ -16,6 +16,7 @@ const painelRoutes = require("./routes/painel.routes");
 const authRoutes = require("./routes/auth.routes");
 const assinaturasRoutes = require("./routes/assinaturas.routes");
 const pdvRoutes = require("./routes/pdv.routes");
+const despesasRoutes = require("./routes/despesas.routes");
 
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
@@ -43,6 +44,7 @@ app.use("/api/painel", painelRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/assinaturas", assinaturasRoutes);
 app.use("/api/pdv", pdvRoutes);
+app.use("/api/despesas", despesasRoutes);
 
 app.get("/", (req, res) => {
   res.send("API NexBarber rodando");

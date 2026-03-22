@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  criarAgendamento,
   getBarbearia,
   getBarbeiros,
   getPlanosAssinatura,
@@ -26,6 +27,12 @@ export default function ModeloBarbearia() {
   const [barbeiroSelecionado, setBarbeiroSelecionado] = useState(null);
   const [buscaBarbeiro, setBuscaBarbeiro] = useState("");
   const [filtroEstrelas, setFiltroEstrelas] = useState(0);
+  const [tipoCliente, setTipoCliente] = useState("Adulto");
+  const [formaPagamento, setFormaPagamento] = useState("Pix");
+  const [observacao, setObservacao] = useState("");
+  const [clienteNome, setClienteNome] = useState("");
+  const [clienteTelefone, setClienteTelefone] = useState("");
+  const [salvandoAgendamento, setSalvandoAgendamento] = useState(false);
 
   const [barbearia, setBarbearia] = useState(null);
   const [barbeiros, setBarbeiros] = useState([]);
@@ -223,13 +230,74 @@ export default function ModeloBarbearia() {
     const anchors = {
       agendamento: "sec-agendamento",
       servicos: "sec-servicos",
-      planos: "sec-planos",
       barbeiro: "sec-barbeiros",
     };
 
     requestAnimationFrame(() => {
       irPara(anchors[novaTab]);
     });
+  };
+
+  const handleAvancarAgendamento = () => {
+    if (!horaSelecionada) {
+      alert("Selecione um horario");
+      return;
+    }
+
+    handleChangeTab("servicos");
+  };
+
+  const handleSelecionarServico = (servico) => {
+    setServicoSelecionado(servico);
+    setBarbeiroSelecionado(null);
+    handleChangeTab("barbeiro");
+  };
+
+  const handleConfirmarAgendamento = async () => {
+    if (!servicoSelecionado || !horaSelecionada || !barbeiroSelecionado) {
+      alert("Complete o agendamento antes de confirmar.");
+      return;
+    }
+
+    if (!clienteNome.trim() || !clienteTelefone.trim()) {
+      alert("Informe nome e telefone para concluir o agendamento.");
+      return;
+    }
+
+    try {
+      setSalvandoAgendamento(true);
+
+      await criarAgendamento({
+        barbearia_id: Number(id),
+        cliente_id: null,
+        cliente_nome: clienteNome.trim(),
+        cliente_telefone: clienteTelefone.trim(),
+        barbeiro_id: barbeiroSelecionado.id,
+        servico_id: servicoSelecionado.id,
+        data: `${dataSelecionada.getFullYear()}-${String(
+          dataSelecionada.getMonth() + 1,
+        ).padStart(2, "0")}-${String(dataSelecionada.getDate()).padStart(2, "0")}`,
+        hora: horaSelecionada,
+        observacao: `Tipo de cliente: ${tipoCliente} | Pagamento: ${formaPagamento}${
+          observacao ? ` | Obs: ${observacao}` : ""
+        }`,
+      });
+
+      alert("Agendamento confirmado com sucesso.");
+      setTab("agendamento");
+      setHoraSelecionada("");
+      setServicoSelecionado(null);
+      setBarbeiroSelecionado(null);
+      setObservacao("");
+      setClienteNome("");
+      setClienteTelefone("");
+      setTipoCliente("Adulto");
+      setFormaPagamento("Pix");
+    } catch (error) {
+      alert(error.message || "Nao foi possivel confirmar o agendamento.");
+    } finally {
+      setSalvandoAgendamento(false);
+    }
   };
 
   const podeVoltarMes =
@@ -295,6 +363,45 @@ export default function ModeloBarbearia() {
         </div>
       </section>
 
+      {planoPublicoVisivel ? (
+        <section className="bb-planos-showcase">
+          <div className="bb-planos-showcase-copy">
+            <p className="bb-section-kicker">Assinaturas da Barbearia</p>
+            <h2>{barbearia?.titulo_planos_publico || "Planos da barbearia"}</h2>
+            <p>
+              {barbearia?.subtitulo_planos_publico ||
+                "Escolha um plano recorrente para manter o cuidado em dia."}
+            </p>
+          </div>
+
+          <div className="bb-planos-showcase-grid">
+            {planosAtivos.slice(0, 3).map((plano) => (
+              <article key={plano.id} className="bb-plano-card bb-plano-card-compact">
+                <div className="bb-plano-tag">{plano.recorrencia || "mensal"}</div>
+                <h3>{plano.nome}</h3>
+                <div className="bb-plano-preco">
+                  <strong>R$ {Number(plano.preco || 0).toFixed(2)}</strong>
+                  <span>/ mes</span>
+                </div>
+                <div className="bb-plano-benefits">
+                  <div className="bb-plano-benefit">
+                    <span className="bb-dot" />
+                    <span>{plano.cortes_inclusos || 0} cortes inclusos</span>
+                  </div>
+                  <div className="bb-plano-benefit">
+                    <span className="bb-dot" />
+                    <span>{plano.barbas_inclusas || 0} barbas inclusas</span>
+                  </div>
+                </div>
+                <button className="bb-plano-btn" type="button">
+                  Quero esse plano
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="bb-tabs">
         <button
           className={`bb-tab ${tab === "agendamento" ? "active" : ""}`}
@@ -307,12 +414,6 @@ export default function ModeloBarbearia() {
           onClick={() => handleChangeTab("servicos")}
         >
           Servicos
-        </button>
-        <button
-          className={`bb-tab ${tab === "planos" ? "active" : ""}`}
-          onClick={() => handleChangeTab("planos")}
-        >
-          Planos
         </button>
         <button
           className={`bb-tab ${tab === "barbeiro" ? "active" : ""}`}
@@ -378,8 +479,8 @@ export default function ModeloBarbearia() {
               </button>
             </div>
             <div className="bb-calendar-weekdays">
-              {diasSemana.map((dia) => (
-                <span key={dia}>{dia}</span>
+              {diasSemana.map((dia, index) => (
+                <span key={`${dia}-${index}`}>{dia}</span>
               ))}
             </div>
             <div className="bb-calendar-grid">
@@ -428,18 +529,7 @@ export default function ModeloBarbearia() {
             </div>
 
             <div className="bb-continueRow">
-              <button
-                className="bb-continue"
-                onClick={() => {
-                  if (!horaSelecionada) {
-                    alert("Selecione um horario");
-                    return;
-                  }
-
-                  const dataFormatada = `${dataSelecionada.getDate()}/${dataSelecionada.getMonth() + 1}/${dataSelecionada.getFullYear()}`;
-                  alert(`Agendamento: ${dataFormatada} as ${horaSelecionada}`);
-                }}
-              >
+              <button className="bb-continue" onClick={handleAvancarAgendamento}>
                 Continuar
               </button>
             </div>
@@ -497,7 +587,7 @@ export default function ModeloBarbearia() {
                       : [],
                 }}
                 selected={servicoSelecionado?.id === servico.id}
-                onSelect={() => setServicoSelecionado(servico)}
+                onSelect={() => handleSelecionarServico(servico)}
               />
             ))
           ) : (
@@ -507,67 +597,6 @@ export default function ModeloBarbearia() {
           )}
         </div>
 
-      </section>
-
-      <section
-        id="sec-planos"
-        className={`bb-section ${tab !== "planos" ? "bb-section-hidden" : ""}`}
-      >
-        <div className="bb-section-header">
-          <p className="bb-section-kicker">Assinaturas</p>
-          <h2 className="bb-h2">
-            {barbearia?.titulo_planos_publico || "Planos da barbearia"}
-          </h2>
-          <p className="bb-section-subtitle">
-            {barbearia?.subtitulo_planos_publico ||
-              "Escolha um plano recorrente para manter o cuidado em dia."}
-          </p>
-        </div>
-
-        {planoPublicoVisivel ? (
-          <div className="bb-planos-grid">
-            {planosAtivos.map((plano) => (
-              <article key={plano.id} className="bb-plano-card">
-                <div className="bb-plano-tag">{plano.recorrencia || "mensal"}</div>
-
-                <h3>{plano.nome}</h3>
-                <p className="bb-plano-descricao">
-                  {plano.descricao || "Plano recorrente da barbearia."}
-                </p>
-
-                <div className="bb-plano-preco">
-                  <strong>R$ {Number(plano.preco || 0).toFixed(2)}</strong>
-                  <span>/ mes</span>
-                </div>
-
-                <div className="bb-plano-benefits">
-                  <div className="bb-plano-benefit">
-                    <span className="bb-dot" />
-                    <span>{plano.cortes_inclusos || 0} cortes inclusos</span>
-                  </div>
-                  <div className="bb-plano-benefit">
-                    <span className="bb-dot" />
-                    <span>{plano.barbas_inclusas || 0} barbas inclusas</span>
-                  </div>
-                  {plano.beneficios ? (
-                    <div className="bb-plano-benefit">
-                      <span className="bb-dot" />
-                      <span>{plano.beneficios}</span>
-                    </div>
-                  ) : null}
-                </div>
-
-                <button className="bb-plano-btn" type="button">
-                  Quero esse plano
-                </button>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="bb-empty-card">
-            Esta barbearia nao possui planos ativos no momento.
-          </div>
-        )}
       </section>
 
       <section
@@ -653,8 +682,32 @@ export default function ModeloBarbearia() {
             </div>
 
             <div className="bb-campo">
+              <label>Nome do cliente</label>
+              <input
+                className="bb-select"
+                value={clienteNome}
+                onChange={(e) => setClienteNome(e.target.value)}
+                placeholder="Digite seu nome"
+              />
+            </div>
+
+            <div className="bb-campo">
+              <label>Telefone</label>
+              <input
+                className="bb-select"
+                value={clienteTelefone}
+                onChange={(e) => setClienteTelefone(e.target.value)}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div className="bb-campo">
               <label>Tipo de cliente</label>
-              <select className="bb-select">
+              <select
+                className="bb-select"
+                value={tipoCliente}
+                onChange={(e) => setTipoCliente(e.target.value)}
+              >
                 <option>Adulto</option>
                 <option>Crianca</option>
               </select>
@@ -662,7 +715,11 @@ export default function ModeloBarbearia() {
 
             <div className="bb-campo">
               <label>Forma de pagamento</label>
-              <select className="bb-select">
+              <select
+                className="bb-select"
+                value={formaPagamento}
+                onChange={(e) => setFormaPagamento(e.target.value)}
+              >
                 <option>Pix</option>
                 <option>Dinheiro</option>
                 <option>Cartao Debito</option>
@@ -675,6 +732,8 @@ export default function ModeloBarbearia() {
               <textarea
                 className="bb-textarea"
                 placeholder="Ex: Deixar mais baixo na lateral..."
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
               />
             </div>
 
@@ -687,9 +746,10 @@ export default function ModeloBarbearia() {
 
             <button
               className="bb-btn-confirmar"
-              disabled={!servicoSelecionado || !horaSelecionada}
+              disabled={!servicoSelecionado || !horaSelecionada || !barbeiroSelecionado}
+              onClick={handleConfirmarAgendamento}
             >
-              Confirmar Agendamento
+              {salvandoAgendamento ? "Confirmando..." : "Confirmar Agendamento"}
             </button>
           </div>
         </div>
