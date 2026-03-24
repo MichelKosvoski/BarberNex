@@ -17,27 +17,29 @@ import {
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiAdminLine } from "react-icons/ri";
 import {
+  canAccessPainelFeature,
   getAgendamentosPainel,
   getBarbearia,
   getPainelBarbeariaId,
+  getSessionUser,
 } from "../../services/api";
 import "../../styles/painel.css";
 
 const menuPrincipal = [
-  { to: "/painel", label: "Painel", icon: FiHome, end: true },
-  { to: "/painel/agenda", label: "Agenda", icon: FiCalendar },
-  { to: "/painel/clientes", label: "Clientes", icon: FiUsers },
-  { to: "/painel/barbeiros", label: "Barbeiros", icon: FiScissors },
-  { to: "/painel/servicos", label: "Servicos", icon: FiShoppingBag },
-  { to: "/painel/produtos", label: "Produtos", icon: FiPackage },
-  { to: "/painel/relatorios", label: "Relatorios", icon: FiBarChart2 },
-  { to: "/painel/assinaturas", label: "Assinaturas", icon: FiRepeat },
-  { to: "/painel/pdv", label: "PDV", icon: FiCreditCard },
-  { to: "/painel/personalizar", label: "Personalizar Site", icon: FiImage },
+  { to: "/painel", label: "Painel", icon: FiHome, end: true, feature: "painel" },
+  { to: "/painel/agenda", label: "Agenda", icon: FiCalendar, feature: "agenda" },
+  { to: "/painel/clientes", label: "Clientes", icon: FiUsers, feature: "clientes" },
+  { to: "/painel/barbeiros", label: "Barbeiros", icon: FiScissors, feature: "barbeiros" },
+  { to: "/painel/servicos", label: "Servicos", icon: FiShoppingBag, feature: "servicos" },
+  { to: "/painel/produtos", label: "Produtos", icon: FiPackage, feature: "produtos" },
+  { to: "/painel/relatorios", label: "Relatorios", icon: FiBarChart2, feature: "relatorios" },
+  { to: "/painel/assinaturas", label: "Assinaturas", icon: FiRepeat, feature: "assinaturas" },
+  { to: "/painel/pdv", label: "PDV", icon: FiCreditCard, feature: "pdv" },
+  { to: "/painel/personalizar", label: "Personalizar Site", icon: FiImage, feature: "personalizar" },
 ];
 
 const menuSecundario = [
-  { to: "/painel/configuracoes", label: "Configuracoes", icon: FiSettings },
+  { to: "/painel/configuracoes", label: "Configuracoes", icon: FiSettings, feature: "configuracoes" },
 ];
 
 export default function PainelLayout() {
@@ -45,6 +47,7 @@ export default function PainelLayout() {
   const [notificacoes, setNotificacoes] = useState([]);
   const [painelNotificacoesAberto, setPainelNotificacoesAberto] = useState(false);
   const ultimaLeituraRef = useRef(new Set());
+  const user = getSessionUser();
 
   function tocarAlerta() {
     try {
@@ -172,6 +175,14 @@ export default function PainelLayout() {
 
   const totalNotificacoes = notificacoes.length;
   const notificacoesExibidas = useMemo(() => notificacoes.slice(0, 6), [notificacoes]);
+  const menuPrincipalFiltrado = useMemo(
+    () => menuPrincipal.filter((item) => canAccessPainelFeature(item.feature, user?.plano)),
+    [user?.plano],
+  );
+  const menuSecundarioFiltrado = useMemo(
+    () => menuSecundario.filter((item) => canAccessPainelFeature(item.feature, user?.plano)),
+    [user?.plano],
+  );
 
   return (
     <div className="painel-shell">
@@ -189,7 +200,7 @@ export default function PainelLayout() {
           </div>
 
           <nav className="painel-nav">
-            {menuPrincipal.map((item) => {
+            {menuPrincipalFiltrado.map((item) => {
               const Icon = item.icon;
 
               return (
@@ -210,7 +221,7 @@ export default function PainelLayout() {
         </div>
 
         <div className="painel-sidebar-footer">
-          {menuSecundario.map((item) => {
+          {menuSecundarioFiltrado.map((item) => {
             const Icon = item.icon;
 
             return (
@@ -257,8 +268,8 @@ export default function PainelLayout() {
                 <RiAdminLine />
               </div>
               <div>
-                <strong>Administrador</strong>
-                <span>{barbearia?.plano || "Plano base"}</span>
+                <strong>{user?.tipo === "funcionario" ? "Funcionario" : "Administrador"}</strong>
+                <span>{user?.plano || barbearia?.plano || "Plano base"}</span>
               </div>
             </div>
           </div>

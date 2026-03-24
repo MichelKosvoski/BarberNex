@@ -20,6 +20,13 @@ function formatCurrency(value) {
   });
 }
 
+function formatDateLabel(value) {
+  if (!value) return "--/--/----";
+  const [year, month, day] = value.split("-");
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
+}
+
 const periodOptions = [
   { value: "1m", label: "1 mes" },
   { value: "3m", label: "3 meses" },
@@ -123,15 +130,6 @@ export default function MasterHome() {
 
   const cidadesDisponiveis = useMemo(() => dados?.filtros?.cidades || [], [dados]);
 
-  useEffect(() => {
-    if (!dados?.filtros) return;
-    setFiltros((prev) => ({
-      ...prev,
-      dataInicio: prev.dataInicio || dados.filtros.dataInicio || "",
-      dataFim: prev.dataFim || dados.filtros.dataFim || "",
-    }));
-  }, [dados]);
-
   const indicadores = [
     {
       titulo: "Barbearias filtradas",
@@ -178,6 +176,8 @@ export default function MasterHome() {
   ];
 
   const filtroManualAtivo = Boolean(filtros.dataInicio || filtros.dataFim);
+  const periodoSelecionadoLabel =
+    periodOptions.find((item) => item.value === filtros.periodo)?.label || "12 meses";
 
   return (
     <section className="painel-content">
@@ -198,144 +198,154 @@ export default function MasterHome() {
       <section className="painel-card">
         <div className="painel-card-header">
           <div>
-            <h4>Filtros do dashboard</h4>
-            <p>Limite a leitura por recorte comercial e some o faturamento no periodo escolhido.</p>
+            <h4>Filtro avancado do dashboard</h4>
+            <p>Use atalhos rapidos ou selecione manualmente o intervalo exato que quer somar.</p>
           </div>
         </div>
 
-        <div className="painel-filter-section">
-          <div className="painel-filter-section-head">
-            <strong>Periodo rapido</strong>
-            <span>Mantenha os atalhos de 1, 3, 6, 12 ou 24 meses.</span>
-          </div>
+        <div className="painel-master-filter-bar">
+          <div className="painel-master-filter-row">
+            <div className="painel-filter-section">
+              <div className="painel-filter-section-head">
+                <strong>Periodo rapido</strong>
+                <span>Mantem atalhos prontos sem perder o filtro manual.</span>
+              </div>
 
-          <div className="painel-table-toolbar">
-            <select
-              className="painel-toolbar-select"
-              value={filtros.periodo}
-              onChange={(event) =>
-                setFiltros((prev) => ({
-                  ...prev,
-                  periodo: event.target.value,
-                  dataInicio: "",
-                  dataFim: "",
-                }))
-              }
-            >
-              {periodOptions.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
+              <div className="painel-period-chips">
+                {periodOptions.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    className={`painel-period-chip ${
+                      filtros.periodo === item.value && !filtroManualAtivo ? "is-active" : ""
+                    }`}
+                    onClick={() =>
+                      setFiltros((prev) => ({
+                        ...prev,
+                        periodo: item.value,
+                        dataInicio: "",
+                        dataFim: "",
+                      }))
+                    }
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            <select
-              className="painel-toolbar-select"
-              value={filtros.estado}
-              onChange={(event) =>
-                setFiltros((prev) => ({ ...prev, estado: event.target.value, cidade: "" }))
-              }
-            >
-              <option value="">Todos os estados</option>
-              {(dados?.filtros?.estados || []).map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+            <div className="painel-filter-section">
+              <div className="painel-filter-section-head">
+                <strong>Intervalo manual</strong>
+                <span>
+                  <FiCalendar />
+                  Exemplo: 01/10/2025 ate 22/03/2026.
+                </span>
+              </div>
 
-            <select
-              className="painel-toolbar-select"
-              value={filtros.cidade}
-              onChange={(event) =>
-                setFiltros((prev) => ({ ...prev, cidade: event.target.value }))
-              }
-            >
-              <option value="">Todas as cidades</option>
-              {cidadesDisponiveis.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+              <div className="painel-date-toolbar">
+                <label className="painel-date-field">
+                  <span>Data inicial</span>
+                  <input
+                    type="date"
+                    className="painel-search"
+                    value={filtros.dataInicio}
+                    onChange={(event) =>
+                      setFiltros((prev) => ({
+                        ...prev,
+                        dataInicio: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
 
-        <div className="painel-filter-section">
-          <div className="painel-filter-section-head">
-            <strong>Intervalo manual</strong>
-            <span>
-              <FiCalendar />
-              Se preencher datas, esse intervalo substitui o periodo rapido.
-            </span>
-          </div>
+                <label className="painel-date-field">
+                  <span>Data final</span>
+                  <input
+                    type="date"
+                    className="painel-search"
+                    value={filtros.dataFim}
+                    onChange={(event) =>
+                      setFiltros((prev) => ({
+                        ...prev,
+                        dataFim: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
 
-          <div className="painel-date-toolbar">
-            <label className="painel-date-field">
-              <span>Data inicial</span>
-              <input
-                type="date"
-                className="painel-search"
-                value={filtros.dataInicio}
-                onChange={(event) =>
-                  setFiltros((prev) => {
-                    const nextInicio = event.target.value;
-                    const manualAtivo = Boolean(nextInicio || prev.dataFim);
-
-                    return {
+                <button
+                  type="button"
+                  className="painel-filter-chip"
+                  onClick={() =>
+                    setFiltros((prev) => ({
                       ...prev,
-                      dataInicio: nextInicio,
-                      periodo: manualAtivo ? "custom" : "12m",
-                    };
-                  })
-                }
-              />
-            </label>
+                      dataInicio: "",
+                      dataFim: "",
+                    }))
+                  }
+                >
+                  Limpar intervalo
+                </button>
+              </div>
 
-            <label className="painel-date-field">
-              <span>Data final</span>
-              <input
-                type="date"
-                className="painel-search"
-                value={filtros.dataFim}
-                onChange={(event) =>
-                  setFiltros((prev) => {
-                    const nextFim = event.target.value;
-                    const manualAtivo = Boolean(prev.dataInicio || nextFim);
-
-                    return {
-                      ...prev,
-                      dataFim: nextFim,
-                      periodo: manualAtivo ? "custom" : "12m",
-                    };
-                  })
-                }
-              />
-            </label>
-
-            <button
-              type="button"
-              className="painel-filter-chip"
-              onClick={() =>
-                setFiltros((prev) => ({
-                  ...prev,
-                  periodo: "12m",
-                  dataInicio: "",
-                  dataFim: "",
-                }))
-              }
-            >
-              Limpar intervalo
-            </button>
+              <div className="painel-filter-inline-status">
+                <span className={`painel-filter-mode ${filtroManualAtivo ? "is-active" : ""}`}>
+                  {filtroManualAtivo
+                    ? `Manual: ${formatDateLabel(filtros.dataInicio)} ate ${formatDateLabel(filtros.dataFim)}`
+                    : `Rapido: ${periodoSelecionadoLabel}`}
+                </span>
+                <small>
+                  {filtroManualAtivo
+                    ? "O dashboard esta somando apenas o intervalo manual informado."
+                    : "Sem datas manuais, o painel usa o periodo rapido selecionado."}
+                </small>
+              </div>
+            </div>
           </div>
 
-          <div className="painel-filter-inline-status">
-            <span className={`painel-filter-mode ${filtroManualAtivo ? "is-active" : ""}`}>
-              {filtroManualAtivo ? "Filtro manual ativo" : "Usando periodo rapido"}
-            </span>
-            <small>
-              Exemplo: `01/10/2025 ate 22/03/2026`.
-            </small>
+          <div className="painel-master-filter-row is-compact">
+            <div className="painel-filter-section">
+              <div className="painel-filter-section-head">
+                <strong>Recorte geografico</strong>
+                <span>
+                  <FiMapPin />
+                  Estado fixo e cidades dinamicas conforme os cadastros.
+                </span>
+              </div>
+
+              <div className="painel-table-toolbar is-master-filters">
+                <select
+                  className="painel-toolbar-select"
+                  value={filtros.estado}
+                  onChange={(event) =>
+                    setFiltros((prev) => ({ ...prev, estado: event.target.value, cidade: "" }))
+                  }
+                >
+                  <option value="">Todos os estados</option>
+                  {(dados?.filtros?.estados || []).map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  className="painel-toolbar-select"
+                  value={filtros.cidade}
+                  onChange={(event) =>
+                    setFiltros((prev) => ({ ...prev, cidade: event.target.value }))
+                  }
+                >
+                  <option value="">Todas as cidades</option>
+                  {cidadesDisponiveis.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -371,8 +381,8 @@ export default function MasterHome() {
             <div className="painel-header-tools">
               <span className="painel-filter-chip">
                 {filtroManualAtivo
-                  ? `${filtros.dataInicio || "..."} ate ${filtros.dataFim || "..."}`
-                  : periodOptions.find((item) => item.value === filtros.periodo)?.label || "12 meses"}
+                  ? `${formatDateLabel(filtros.dataInicio)} ate ${formatDateLabel(filtros.dataFim)}`
+                  : periodoSelecionadoLabel}
               </span>
             </div>
           </div>

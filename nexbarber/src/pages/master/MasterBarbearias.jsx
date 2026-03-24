@@ -2,9 +2,60 @@ import { useEffect, useMemo, useState } from "react";
 import { getMasterBarbearias, updateMasterBarbearia } from "../../services/api";
 
 const estadosBrasil = [
-  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS",
-  "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC",
-  "SP", "SE", "TO",
+  "AC",
+  "AL",
+  "AP",
+  "AM",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MT",
+  "MS",
+  "MG",
+  "PA",
+  "PB",
+  "PR",
+  "PE",
+  "PI",
+  "RJ",
+  "RN",
+  "RS",
+  "RO",
+  "RR",
+  "SC",
+  "SP",
+  "SE",
+  "TO",
+];
+
+const planosSistema = [
+  {
+    value: "",
+    label: "Sem plano",
+    preco: 0,
+    descricao: "Barbearia sem assinatura definida.",
+  },
+  {
+    value: "Agenda",
+    label: "Agenda - R$ 85",
+    preco: 85,
+    descricao: "Somente agenda e operacao basica.",
+  },
+  {
+    value: "Completo",
+    label: "Completo - R$ 120",
+    preco: 120,
+    descricao: "Painel completo com administracao da barbearia.",
+  },
+  {
+    value: "Personalizado",
+    label: "Personalizado",
+    preco: null,
+    descricao: "Plano ajustado manualmente por voce.",
+  },
 ];
 
 const initialEdit = {
@@ -48,14 +99,24 @@ export default function MasterBarbearias() {
   const listaFiltrada = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return barbearias.filter((item) => {
-      const bateBusca = !termo
-        || [item.nome, item.cidade, item.estado, item.plano, item.responsavel_nome, item.responsavel_email]
+      const bateBusca =
+        !termo ||
+        [
+          item.nome,
+          item.cidade,
+          item.estado,
+          item.plano,
+          item.responsavel_nome,
+          item.responsavel_email,
+        ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(termo));
 
       const bateEstado = !filtroEstado || item.estado === filtroEstado;
-      const bateAssinatura = !filtroAssinatura || item.status_assinatura === filtroAssinatura;
-      const batePagamento = !filtroPagamento || item.status_pagamento === filtroPagamento;
+      const bateAssinatura =
+        !filtroAssinatura || item.status_assinatura === filtroAssinatura;
+      const batePagamento =
+        !filtroPagamento || item.status_pagamento === filtroPagamento;
 
       return bateBusca && bateEstado && bateAssinatura && batePagamento;
     });
@@ -64,11 +125,23 @@ export default function MasterBarbearias() {
   const resumoCarteira = useMemo(() => {
     return {
       total: barbearias.length,
-      ativas: barbearias.filter((item) => item.status_assinatura === "ativa").length,
-      pendentes: barbearias.filter((item) => item.status_assinatura === "pendente").length,
-      bloqueadas: barbearias.filter((item) => item.status_assinatura === "bloqueada").length,
+      ativas: barbearias.filter((item) => item.status_assinatura === "ativa")
+        .length,
+      pendentes: barbearias.filter(
+        (item) => item.status_assinatura === "pendente",
+      ).length,
+      bloqueadas: barbearias.filter(
+        (item) => item.status_assinatura === "bloqueada",
+      ).length,
     };
   }, [barbearias]);
+
+  const planoSelecionado = useMemo(
+    () =>
+      planosSistema.find((item) => item.value === editando.plano) ||
+      planosSistema[0],
+    [editando.plano],
+  );
 
   const iniciarEdicao = (item) => {
     setFeedback("");
@@ -80,12 +153,29 @@ export default function MasterBarbearias() {
       plano: item.plano || "",
       status_assinatura: item.status_assinatura || "pendente",
       status_pagamento: item.status_pagamento || "pendente",
-      vencimento_assinatura: item.vencimento_assinatura ? String(item.vencimento_assinatura).slice(0, 10) : "",
-      ultimo_pagamento: item.ultimo_pagamento ? String(item.ultimo_pagamento).slice(0, 10) : "",
+      vencimento_assinatura: item.vencimento_assinatura
+        ? String(item.vencimento_assinatura).slice(0, 10)
+        : "",
+      ultimo_pagamento: item.ultimo_pagamento
+        ? String(item.ultimo_pagamento).slice(0, 10)
+        : "",
       valor_mensalidade: item.valor_mensalidade ?? "",
       destaque_home: Boolean(item.destaque_home),
       observacoes_admin: item.observacoes_admin || "",
     });
+  };
+
+  const handlePlanoChange = (value) => {
+    const plano = planosSistema.find((item) => item.value === value);
+
+    setEditando((prev) => ({
+      ...prev,
+      plano: value,
+      valor_mensalidade:
+        plano && plano.preco !== null
+          ? String(plano.preco)
+          : prev.valor_mensalidade,
+    }));
   };
 
   const salvar = async (e) => {
@@ -123,7 +213,10 @@ export default function MasterBarbearias() {
       <div className="painel-hero painel-hero-compact">
         <div>
           <p className="painel-eyebrow">Operacao comercial</p>
-          <h3>Ative, bloqueie, altere plano e marque pagamento manualmente sem entrar no painel da barbearia.</h3>
+          <h3>
+            Ative, bloqueie, altere plano e marque pagamento manualmente sem
+            entrar no painel da barbearia.
+          </h3>
         </div>
       </div>
 
@@ -151,7 +244,9 @@ export default function MasterBarbearias() {
           <div className="painel-stat-top">
             <span className="painel-stat-title">Pendentes</span>
           </div>
-          <strong className="painel-stat-value">{resumoCarteira.pendentes}</strong>
+          <strong className="painel-stat-value">
+            {resumoCarteira.pendentes}
+          </strong>
           <p className="painel-stat-detail">Aguardando definicao</p>
         </article>
 
@@ -159,7 +254,9 @@ export default function MasterBarbearias() {
           <div className="painel-stat-top">
             <span className="painel-stat-title">Bloqueadas</span>
           </div>
-          <strong className="painel-stat-value">{resumoCarteira.bloqueadas}</strong>
+          <strong className="painel-stat-value">
+            {resumoCarteira.bloqueadas}
+          </strong>
           <p className="painel-stat-detail">Sem acesso ao painel</p>
         </article>
       </div>
@@ -239,26 +336,37 @@ export default function MasterBarbearias() {
                       <td>
                         <strong>{item.nome}</strong>
                         <div className="painel-cell-copy">
-                          {(item.cidade || "Cidade") + " - " + (item.estado || "--")}
+                          {(item.cidade || "Cidade") +
+                            " - " +
+                            (item.estado || "--")}
                         </div>
-                        <div className="painel-cell-copy">{item.responsavel_nome || "Sem responsavel"}</div>
+                        <div className="painel-cell-copy">
+                          {item.responsavel_nome || "Sem responsavel"}
+                        </div>
                       </td>
                       <td>{item.plano || "Sem plano"}</td>
                       <td>
-                        <span className={`painel-status-chip is-${item.status_assinatura || "pendente"}`}>
+                        <span
+                          className={`painel-status-chip is-${item.status_assinatura || "pendente"}`}
+                        >
                           {item.status_assinatura || "pendente"}
                         </span>
                       </td>
                       <td>
-                        <span className={`painel-status-chip is-${item.status_pagamento || "pendente"}`}>
+                        <span
+                          className={`painel-status-chip is-${item.status_pagamento || "pendente"}`}
+                        >
                           {item.status_pagamento || "pendente"}
                         </span>
                       </td>
                       <td>
-                        {Number(item.valor_mensalidade || 0).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
+                        {Number(item.valor_mensalidade || 0).toLocaleString(
+                          "pt-BR",
+                          {
+                            style: "currency",
+                            currency: "BRL",
+                          },
+                        )}
                       </td>
                       <td>
                         <div className="painel-table-actions">
@@ -297,14 +405,18 @@ export default function MasterBarbearias() {
             <form className="painel-form-grid" onSubmit={salvar}>
               <div className="painel-master-selected">
                 <strong>{editando.nome}</strong>
-                <span>Atualize manualmente o status comercial dessa barbearia.</span>
+                <span>
+                  Atualize manualmente o status comercial dessa barbearia.
+                </span>
               </div>
 
               <label className="painel-field">
                 <span>Status da barbearia</span>
                 <select
                   value={editando.status}
-                  onChange={(e) => setEditando((prev) => ({ ...prev, status: e.target.value }))}
+                  onChange={(e) =>
+                    setEditando((prev) => ({ ...prev, status: e.target.value }))
+                  }
                 >
                   <option value="ativo">Ativo</option>
                   <option value="inativo">Inativo</option>
@@ -313,11 +425,22 @@ export default function MasterBarbearias() {
 
               <label className="painel-field">
                 <span>Plano</span>
-                <input
+                <select
                   value={editando.plano}
-                  onChange={(e) => setEditando((prev) => ({ ...prev, plano: e.target.value }))}
-                  placeholder="Base, Pro, Premium..."
-                />
+                  onChange={(e) => handlePlanoChange(e.target.value)}
+                >
+                  {planosSistema.map((plano) => (
+                    <option
+                      key={plano.value || "sem-plano"}
+                      value={plano.value}
+                    >
+                      {plano.label}
+                    </option>
+                  ))}
+                </select>
+                <small className="painel-field-help">
+                  {planoSelecionado.descricao}
+                </small>
               </label>
 
               <label className="painel-field">
@@ -325,7 +448,10 @@ export default function MasterBarbearias() {
                 <select
                   value={editando.status_assinatura}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, status_assinatura: e.target.value }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      status_assinatura: e.target.value,
+                    }))
                   }
                 >
                   <option value="pendente">Pendente</option>
@@ -341,7 +467,10 @@ export default function MasterBarbearias() {
                 <select
                   value={editando.status_pagamento}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, status_pagamento: e.target.value }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      status_pagamento: e.target.value,
+                    }))
                   }
                 >
                   <option value="pendente">Pendente</option>
@@ -357,7 +486,10 @@ export default function MasterBarbearias() {
                   type="date"
                   value={editando.vencimento_assinatura}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, vencimento_assinatura: e.target.value }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      vencimento_assinatura: e.target.value,
+                    }))
                   }
                 />
               </label>
@@ -368,7 +500,10 @@ export default function MasterBarbearias() {
                   type="date"
                   value={editando.ultimo_pagamento}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, ultimo_pagamento: e.target.value }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      ultimo_pagamento: e.target.value,
+                    }))
                   }
                 />
               </label>
@@ -381,7 +516,10 @@ export default function MasterBarbearias() {
                   min="0"
                   value={editando.valor_mensalidade}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, valor_mensalidade: e.target.value }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      valor_mensalidade: e.target.value,
+                    }))
                   }
                 />
               </label>
@@ -391,7 +529,10 @@ export default function MasterBarbearias() {
                   type="checkbox"
                   checked={editando.destaque_home}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, destaque_home: e.target.checked }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      destaque_home: e.target.checked,
+                    }))
                   }
                 />
                 <span>Barbearia em destaque na home</span>
@@ -403,21 +544,29 @@ export default function MasterBarbearias() {
                   rows="5"
                   value={editando.observacoes_admin}
                   onChange={(e) =>
-                    setEditando((prev) => ({ ...prev, observacoes_admin: e.target.value }))
+                    setEditando((prev) => ({
+                      ...prev,
+                      observacoes_admin: e.target.value,
+                    }))
                   }
                   placeholder="Observacoes comerciais, pagamento, negociacao ou suporte..."
                 />
               </label>
 
               <div className="painel-form-actions">
-                <button type="submit" className="painel-primary-button" disabled={salvando}>
+                <button
+                  type="submit"
+                  className="painel-primary-button"
+                  disabled={salvando}
+                >
                   {salvando ? "Salvando..." : "Salvar alteracoes"}
                 </button>
               </div>
             </form>
           ) : (
             <div className="painel-empty-state">
-              Escolha uma barbearia na lista para gerenciar o acesso e a assinatura.
+              Escolha uma barbearia na lista para gerenciar o acesso e a
+              assinatura.
             </div>
           )}
         </section>

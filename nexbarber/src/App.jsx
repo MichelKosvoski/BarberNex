@@ -32,22 +32,99 @@ function App() {
         <Route
           path="/painel"
           element={
-            <ProtectedRoute allow={["dono", "funcionario"]}>
+            <ProtectedRoute allow={["dono", "funcionario"]} feature="painel">
               <PainelLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<PainelHome />} />
-          <Route path="agenda" element={<PainelAgenda />} />
-          <Route path="clientes" element={<PainelClientes />} />
-          <Route path="barbeiros" element={<PainelBarbeiros />} />
-          <Route path="servicos" element={<PainelServicos />} />
-          <Route path="produtos" element={<PainelProdutos />} />
-          <Route path="relatorios" element={<PainelRelatorios />} />
-          <Route path="assinaturas" element={<PainelAssinaturas />} />
-          <Route path="pdv" element={<PainelPdv />} />
-          <Route path="personalizar" element={<PainelPersonalizar />} />
-          <Route path="configuracoes" element={<PainelConfiguracoes />} />
+          <Route
+            index
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="painel">
+                <PainelHome />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="agenda"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="agenda">
+                <PainelAgenda />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="clientes"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="clientes">
+                <PainelClientes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="barbeiros"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="barbeiros">
+                <PainelBarbeiros />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="servicos"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="servicos">
+                <PainelServicos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="produtos"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="produtos">
+                <PainelProdutos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="relatorios"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="relatorios">
+                <PainelRelatorios />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="assinaturas"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="assinaturas">
+                <PainelAssinaturas />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="pdv"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="pdv">
+                <PainelPdv />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="personalizar"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="personalizar">
+                <PainelPersonalizar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="configuracoes"
+            element={
+              <ProtectedRoute allow={["dono", "funcionario"]} feature="configuracoes">
+                <PainelConfiguracoes />
+              </ProtectedRoute>
+            }
+          />
         </Route>
         <Route
           path="/master"

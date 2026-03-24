@@ -333,3 +333,263 @@ exports.atualizarBarbeariaMaster = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+exports.listarCobrancasMaster = async (req, res) => {
+  const status = req.query.status || "";
+  const barbeariaId = req.query.barbearia_id || "";
+  const search = req.query.search || "";
+
+  const conditions = [];
+  const params = [];
+
+  if (status) {
+    conditions.push("c.status = ?");
+    params.push(status);
+  }
+
+  if (barbeariaId) {
+    conditions.push("c.barbearia_id = ?");
+    params.push(barbeariaId);
+  }
+
+  if (search) {
+    conditions.push("(b.nome LIKE ? OR c.descricao LIKE ? OR COALESCE(c.plano, '') LIKE ?)");
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  try {
+    const [rows] = await db.query(
+      `
+        SELECT
+          c.*,
+          b.nome AS barbearia_nome,
+          b.cidade AS barbearia_cidade,
+          b.estado AS barbearia_estado,
+          b.status AS barbearia_status,
+          b.status_assinatura AS barbearia_status_assinatura,
+          b.status_pagamento AS barbearia_status_pagamento
+        FROM cobrancas c
+        INNER JOIN barbearias b ON b.id = c.barbearia_id
+        ${where}
+        ORDER BY
+          CASE c.status
+            WHEN 'atrasado' THEN 1
+            WHEN 'pendente' THEN 2
+            WHEN 'pago' THEN 3
+            ELSE 4
+          END,
+          c.vencimento ASC,
+          c.id DESC
+      `,
+      params,
+    );
+
+    return res.json(rows);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.criarCobrancaMaster = async (req, res) => {
+  const {
+    barbearia_id,
+    descricao,
+    plano,
+    referencia,
+    valor,
+    status,
+    metodo,
+    vencimento,
+    checkout_url,
+    observacoes,
+  } = req.body;
+
+  if (!barbearia_id || !descricao || valor === undefined || valor === null) {
+    return res.status(400).json({ error: "Barbearia, descricao e valor sao obrigatorios" });
+  }
+
+  try {
+    const pagoEm =
+      status === "pago" ? new Date().toISOString().slice(0, 19).replace("T", " ") : null;
+
+    const [result] = await db.query(
+      `
+        INSERT INTO cobrancas (
+          barbearia_id,
+          descricao,
+          plano,
+          referencia,
+          valor,
+          status,
+          metodo,
+          vencimento,
+          pago_em,
+          checkout_url,
+          observacoes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        barbearia_id,
+        descricao,
+        plano || null,
+        referencia || null,
+        Number(valor || 0),
+        status || "pendente",
+        metodo || "manual",
+        vencimento || null,
+        pagoEm,
+        checkout_url || null,
+        observacoes || null,
+      ],
+    );
+
+    if (status === "pago") {
+      await db.query(
+        `
+          UPDATE barbearias
+             SET status = 'ativo',
+                 status_assinatura = 'ativa',
+                 status_pagamento = 'pago',
+                 ultimo_pagamento = CURDATE(),
+                 valor_mensalidade = ?
+           WHERE id = ?
+        `,
+        [Number(valor || 0), barbearia_id],
+      );
+    }
+
+    return res.status(201).json({ id: result.insertId, message: "Cobranca criada com sucesso" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.atualizarCobrancaMaster = async (req, res) => {
+  const { id } = req.params;
+  const {
+    descricao,
+    plano,
+    referencia,
+    valor,
+    status,
+    metodo,
+    vencimento,
+    checkout_url,
+    observacoes,
+  } = req.body;
+
+  try {
+    const [[current]] = await db.query("SELECT * FROM cobrancas WHERE id = ?", [id]);
+
+    if (!current) {
+      return res.status(404).json({ error: "Cobranca nao encontrada" });
+    }
+
+    const nextStatus = status || current.status;
+    const shouldMarkPaidNow = nextStatus === "pago" && current.status !== "pago";
+    const paidAtValue =
+      nextStatus === "pago"
+        ? current.pago_em || new Date().toISOString().slice(0, 19).replace("T", " ")
+        : null;
+
+    await db.query(
+      `
+        UPDATE cobrancas
+           SET descricao = ?,
+               plano = ?,
+               referencia = ?,
+               valor = ?,
+               status = ?,
+               metodo = ?,
+               vencimento = ?,
+               pago_em = ?,
+               checkout_url = ?,
+               observacoes = ?
+         WHERE id = ?
+      `,
+      [
+        descricao ?? current.descricao,
+        plano ?? current.plano,
+        referencia ?? current.referencia,
+        valor !== undefined ? Number(valor || 0) : Number(current.valor || 0),
+        nextStatus,
+        metodo ?? current.metodo,
+        vencimento ?? current.vencimento,
+        paidAtValue,
+        checkout_url ?? current.checkout_url,
+        observacoes ?? current.observacoes,
+        id,
+      ],
+    );
+
+    if (nextStatus === "pago") {
+      await db.query(
+        `
+          UPDATE barbearias
+             SET status = 'ativo',
+                 status_assinatura = 'ativa',
+                 status_pagamento = 'pago',
+                 ultimo_pagamento = CURDATE(),
+                 valor_mensalidade = ?
+           WHERE id = ?
+        `,
+        [Number(valor ?? (current.valor || 0)), current.barbearia_id],
+      );
+    } else if (nextStatus === "atrasado") {
+      await db.query(
+        `
+          UPDATE barbearias
+             SET status_pagamento = 'atrasado',
+                 status_assinatura = 'atrasada'
+           WHERE id = ?
+        `,
+        [current.barbearia_id],
+      );
+    } else if (nextStatus === "pendente") {
+      await db.query(
+        `
+          UPDATE barbearias
+             SET status_pagamento = 'pendente'
+           WHERE id = ?
+        `,
+        [current.barbearia_id],
+      );
+    } else if (nextStatus === "cancelado") {
+      await db.query(
+        `
+          UPDATE barbearias
+             SET status_assinatura = 'cancelada',
+                 status_pagamento = 'pendente'
+           WHERE id = ?
+        `,
+        [current.barbearia_id],
+      );
+    }
+
+    return res.json({
+      message: shouldMarkPaidNow
+        ? "Cobranca atualizada e barbearia liberada"
+        : "Cobranca atualizada com sucesso",
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.removerCobrancaMaster = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [result] = await db.query("DELETE FROM cobrancas WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Cobranca nao encontrada" });
+    }
+
+    return res.json({ message: "Cobranca removida com sucesso" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};

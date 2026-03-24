@@ -342,6 +342,31 @@ async function ensureDespesasTable() {
   `);
 }
 
+async function ensureCobrancasTable() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS cobrancas (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      barbearia_id INT NOT NULL,
+      descricao VARCHAR(160) NOT NULL,
+      plano VARCHAR(80) NULL,
+      referencia VARCHAR(80) NULL,
+      valor DECIMAL(10,2) NOT NULL DEFAULT 0,
+      status ENUM('pendente','pago','atrasado','cancelado') NOT NULL DEFAULT 'pendente',
+      metodo ENUM('manual','mercado_pago','pix','boleto','cartao') NOT NULL DEFAULT 'manual',
+      vencimento DATE NULL,
+      pago_em DATETIME NULL,
+      checkout_url TEXT NULL,
+      mercado_pago_preference_id VARCHAR(120) NULL,
+      mercado_pago_payment_id VARCHAR(120) NULL,
+      observacoes TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_cobrancas_barbearia
+        FOREIGN KEY (barbearia_id) REFERENCES barbearias(id)
+        ON DELETE CASCADE
+    )
+  `);
+}
+
 async function ensureServicosCustomizationColumns() {
   const [columns] = await db.query("SHOW COLUMNS FROM servicos");
   const columnNames = new Set(columns.map((column) => column.Field));
@@ -372,6 +397,7 @@ async function ensureSchema() {
   await ensurePdvVendasTable();
   await ensurePdvVendaItensTable();
   await ensureDespesasTable();
+  await ensureCobrancasTable();
 
   const [produtoColumns] = await db.query("SHOW COLUMNS FROM produtos");
   const produtoColumnNames = new Set(produtoColumns.map((column) => column.Field));

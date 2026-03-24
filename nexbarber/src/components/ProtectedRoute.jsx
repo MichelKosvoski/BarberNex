@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
-import { getSessionUser } from "../services/api";
+import { canAccessPainelFeature, getSessionUser } from "../services/api";
 
-export default function ProtectedRoute({ children, allow }) {
+export default function ProtectedRoute({ children, allow, feature }) {
   const user = getSessionUser();
 
   if (!user) {
@@ -10,6 +10,12 @@ export default function ProtectedRoute({ children, allow }) {
 
   if (allow && !allow.includes(user.tipo)) {
     return <Navigate to="/" replace />;
+  }
+
+  if (feature && (user.tipo === "dono" || user.tipo === "funcionario")) {
+    if (!canAccessPainelFeature(feature, user.plano)) {
+      return <Navigate to="/painel/agenda" replace />;
+    }
   }
 
   return children;

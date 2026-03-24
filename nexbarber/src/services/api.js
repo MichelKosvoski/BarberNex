@@ -28,6 +28,22 @@ export function getSessionUser() {
   return raw ? JSON.parse(raw) : null;
 }
 
+export function getSessionPlano() {
+  return String(getSessionUser()?.plano || "").trim();
+}
+
+export function isPlanoAgenda(plano = getSessionPlano()) {
+  return String(plano || "").trim().toLowerCase() === "agenda";
+}
+
+export function canAccessPainelFeature(feature, plano = getSessionPlano()) {
+  if (!isPlanoAgenda(plano)) {
+    return true;
+  }
+
+  return ["painel", "agenda", "configuracoes"].includes(feature);
+}
+
 export function setSessionUser(user) {
   localStorage.setItem("nexbarber_user", JSON.stringify(user));
   if (user?.barbearia_id) {
@@ -359,5 +375,42 @@ export async function updateMasterBarbearia(id, payload) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+  });
+}
+
+export async function getMasterCobrancas(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.status) params.set("status", filters.status);
+  if (filters.barbearia_id) params.set("barbearia_id", filters.barbearia_id);
+  if (filters.search) params.set("search", filters.search);
+
+  const query = params.toString();
+  return fetchJson(`${API_URL}/master/cobrancas${query ? `?${query}` : ""}`);
+}
+
+export async function createMasterCobranca(payload) {
+  return fetchJson(`${API_URL}/master/cobrancas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateMasterCobranca(id, payload) {
+  return fetchJson(`${API_URL}/master/cobrancas/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMasterCobranca(id) {
+  return fetchJson(`${API_URL}/master/cobrancas/${id}`, {
+    method: "DELETE",
   });
 }
