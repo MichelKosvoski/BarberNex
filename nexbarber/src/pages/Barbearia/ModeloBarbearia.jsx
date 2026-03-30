@@ -7,6 +7,12 @@ import {
   getPlanosAssinatura,
   getServicos,
 } from "../../services/api";
+import {
+  demoBarbearia,
+  demoBarbeiros,
+  demoPlanos,
+  demoServicos,
+} from "../../data/demoBarbearia";
 
 import ServiceCard from "../../components/ServiceCard";
 import BarberCard from "../../components/BarberCard";
@@ -14,6 +20,7 @@ import "../../styles/barbearia.css";
 
 export default function ModeloBarbearia() {
   const { id } = useParams();
+  const isDemo = String(id).toLowerCase() === "demo";
   const hoje = new Date();
   const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
@@ -43,6 +50,14 @@ export default function ModeloBarbearia() {
 
   useEffect(() => {
     async function carregar() {
+      if (isDemo) {
+        setBarbearia(demoBarbearia);
+        setBarbeiros(demoBarbeiros);
+        setServicos(demoServicos);
+        setPlanos(demoPlanos);
+        return;
+      }
+
       try {
         const barbeariaData = await getBarbearia(id);
         const barbeirosData = await getBarbeiros(id);
@@ -59,7 +74,7 @@ export default function ModeloBarbearia() {
     }
 
     carregar();
-  }, [id]);
+  }, [id, isDemo]);
 
   const estaAberto = barbearia?.status === "ativo";
 
@@ -271,21 +286,23 @@ export default function ModeloBarbearia() {
       setSalvandoAgendamento(true);
       setMensagemErro("");
 
-      await criarAgendamento({
-        barbearia_id: Number(id),
-        cliente_id: null,
-        cliente_nome: clienteNome.trim(),
-        cliente_telefone: clienteTelefone.trim(),
-        barbeiro_id: barbeiroSelecionado.id,
-        servico_id: servicoSelecionado.id,
-        data: `${dataSelecionada.getFullYear()}-${String(
-          dataSelecionada.getMonth() + 1,
-        ).padStart(2, "0")}-${String(dataSelecionada.getDate()).padStart(2, "0")}`,
-        hora: horaSelecionada,
-        observacao: `Tipo de cliente: ${tipoCliente} | Pagamento: ${formaPagamento}${
-          observacao ? ` | Obs: ${observacao}` : ""
-        }`,
-      });
+      if (!isDemo) {
+        await criarAgendamento({
+          barbearia_id: Number(id),
+          cliente_id: null,
+          cliente_nome: clienteNome.trim(),
+          cliente_telefone: clienteTelefone.trim(),
+          barbeiro_id: barbeiroSelecionado.id,
+          servico_id: servicoSelecionado.id,
+          data: `${dataSelecionada.getFullYear()}-${String(
+            dataSelecionada.getMonth() + 1,
+          ).padStart(2, "0")}-${String(dataSelecionada.getDate()).padStart(2, "0")}`,
+          hora: horaSelecionada,
+          observacao: `Tipo de cliente: ${tipoCliente} | Pagamento: ${formaPagamento}${
+            observacao ? ` | Obs: ${observacao}` : ""
+          }`,
+        });
+      }
 
       setAgendamentoSucesso({
         cliente: clienteNome.trim(),

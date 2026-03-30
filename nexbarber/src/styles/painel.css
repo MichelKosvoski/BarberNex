@@ -54,6 +54,27 @@
   margin-top: 6px;
 }
 
+.painel-master-plan-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.painel-master-plan-head,
+.painel-master-plan-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.painel-master-plan-meta {
+  margin-top: 12px;
+  color: #96a0b8;
+  font-size: 0.9rem;
+}
+
 .painel-stats-grid-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -1495,6 +1516,58 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
+.painel-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #e7ecf9;
+}
+
+.painel-status-chip.is-ativo {
+  color: #7de8ae;
+  border-color: rgba(117, 240, 175, 0.18);
+  background: rgba(117, 240, 175, 0.08);
+}
+
+.painel-status-chip.is-inativo {
+  color: #ffb4b4;
+  border-color: rgba(255, 107, 107, 0.22);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.painel-status-chip.is-pendente {
+  color: #f7d067;
+  border-color: rgba(246, 196, 69, 0.18);
+  background: rgba(246, 196, 69, 0.08);
+}
+
+.painel-status-chip.is-pago {
+  color: #7de8ae;
+  border-color: rgba(117, 240, 175, 0.18);
+  background: rgba(117, 240, 175, 0.08);
+}
+
+.painel-status-chip.is-atrasado,
+.painel-status-chip.is-bloqueada,
+.painel-status-chip.is-cancelada {
+  color: #ffb4b4;
+  border-color: rgba(255, 107, 107, 0.22);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.painel-status-chip.is-ativa {
+  color: #7eb5ff;
+  border-color: rgba(126, 181, 255, 0.2);
+  background: rgba(126, 181, 255, 0.08);
+}
+
 .painel-next-chip {
   color: #f7d067;
   border-color: rgba(246, 196, 69, 0.18);
@@ -1554,6 +1627,12 @@
   color: #0b1324;
   background: linear-gradient(135deg, #7eb5ff, #9dc6ff);
   border-color: rgba(126, 181, 255, 0.2);
+}
+
+.painel-table-btn.is-primary {
+  color: #f6f9ff;
+  background: linear-gradient(135deg, #3160e7, #4d82ff);
+  border-color: rgba(108, 168, 255, 0.24);
 }
 
 .painel-table-btn.is-whatsapp {

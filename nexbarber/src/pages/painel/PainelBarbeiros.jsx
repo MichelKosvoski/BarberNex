@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BarberCard from "../../components/BarberCard";
 import { fileToDataUrl } from "../../utils/fileToDataUrl";
 import {
@@ -28,18 +28,22 @@ export default function PainelBarbeiros() {
 
   const barbeariaId = getPainelBarbeariaId();
 
-  async function carregarBarbeiros() {
+  const carregarBarbeiros = useCallback(async () => {
     try {
       const data = await getBarbeirosPainel(barbeariaId);
       setBarbeiros(data);
     } catch (error) {
       setErro(error.message);
     }
-  }
+  }, [barbeariaId]);
 
   useEffect(() => {
-    carregarBarbeiros();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      void carregarBarbeiros();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [carregarBarbeiros]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

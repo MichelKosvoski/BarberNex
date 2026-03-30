@@ -20,6 +20,7 @@ function sanitizeUser(row) {
     barbearia_nome: row.barbearia_nome || null,
     barbearia_status: row.barbearia_status || null,
     plano: row.plano || null,
+    plano_codigo: row.plano_codigo || null,
     status_assinatura: row.status_assinatura || null,
     status_pagamento: row.status_pagamento || null,
   };
@@ -71,7 +72,7 @@ exports.register = async (req, res) => {
 
     const [rows] = await db.query(
       `
-        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano,
+        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano, b.plano_codigo,
                b.status_assinatura, b.status_pagamento
         FROM usuarios u
         LEFT JOIN barbearias b ON b.id = u.barbearia_id
@@ -99,7 +100,7 @@ exports.login = async (req, res) => {
   try {
     const [rows] = await db.query(
       `
-        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano,
+        SELECT u.*, b.nome AS barbearia_nome, b.status AS barbearia_status, b.plano, b.plano_codigo,
                b.status_assinatura, b.status_pagamento
         FROM usuarios u
         LEFT JOIN barbearias b ON b.id = u.barbearia_id

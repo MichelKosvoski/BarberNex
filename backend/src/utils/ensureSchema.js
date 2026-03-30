@@ -256,6 +256,56 @@ async function ensurePlanosAssinaturaTable() {
   `);
 }
 
+async function ensurePlanosPlataformaTable() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS planos_plataforma (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      codigo VARCHAR(80) NOT NULL UNIQUE,
+      nome VARCHAR(120) NOT NULL,
+      descricao TEXT NULL,
+      destaque VARCHAR(120) NULL,
+      valor_mensal DECIMAL(10,2) NOT NULL DEFAULT 0,
+      beneficios TEXT NULL,
+      escopo ENUM('basico','completo') NOT NULL DEFAULT 'completo',
+      premium TINYINT(1) NOT NULL DEFAULT 0,
+      ordem INT NOT NULL DEFAULT 0,
+      status ENUM('ativo','inativo') NOT NULL DEFAULT 'ativo',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.query(`
+    INSERT IGNORE INTO planos_plataforma
+      (codigo, nome, descricao, destaque, valor_mensal, beneficios, escopo, premium, ordem, status)
+    VALUES
+      (
+        'agenda',
+        'Prata',
+        'Ideal para quem quer vender agenda online sem complexidade.',
+        'Agenda essencial',
+        85.00,
+        '["Agenda online","Controle de agendamentos","Resumo financeiro","Página pública da barbearia","Suporte para operação inicial"]',
+        'basico',
+        0,
+        1,
+        'ativo'
+      ),
+      (
+        'completo',
+        'Gold',
+        'Pacote completo para operar a barbearia com administração total.',
+        'Painel completo',
+        130.00,
+        '["Tudo do plano Prata","Clientes, barbeiros e serviços","Produtos, PDV e caixa","Relatórios e personalização","Painel administrativo completo"]',
+        'completo',
+        1,
+        2,
+        'ativo'
+      )
+  `);
+}
+
 async function ensureClientesAssinaturasTable() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS clientes_assinaturas (
@@ -367,6 +417,80 @@ async function ensureCobrancasTable() {
   `);
 }
 
+async function ensurePlataformaPlanColumns() {
+  const [barbeariaColumns] = await db.query("SHOW COLUMNS FROM barbearias");
+  const barbeariaColumnNames = new Set(barbeariaColumns.map((column) => column.Field));
+
+  if (!barbeariaColumnNames.has("plano_id")) {
+    await db.query(
+      "ALTER TABLE barbearias ADD COLUMN plano_id INT NULL AFTER plano",
+    );
+  }
+
+  if (!barbeariaColumnNames.has("plano_codigo")) {
+    await db.query(
+      "ALTER TABLE barbearias ADD COLUMN plano_codigo VARCHAR(80) NULL AFTER plano_id",
+    );
+  }
+
+  const [cobrancaColumns] = await db.query("SHOW COLUMNS FROM cobrancas");
+  const cobrancaColumnNames = new Set(cobrancaColumns.map((column) => column.Field));
+
+  if (!cobrancaColumnNames.has("plano_id")) {
+    await db.query(
+      "ALTER TABLE cobrancas ADD COLUMN plano_id INT NULL AFTER plano",
+    );
+  }
+
+  if (!cobrancaColumnNames.has("plano_codigo")) {
+    await db.query(
+      "ALTER TABLE cobrancas ADD COLUMN plano_codigo VARCHAR(80) NULL AFTER plano_id",
+    );
+  }
+
+  await db.query(`
+    UPDATE barbearias b
+    LEFT JOIN planos_plataforma p ON
+      p.codigo = b.plano_codigo
+      OR LOWER(TRIM(COALESCE(b.plano, ''))) = LOWER(TRIM(p.nome))
+      OR (
+        p.codigo = 'agenda'
+        AND LOWER(TRIM(COALESCE(b.plano, ''))) IN ('agenda', 'prata')
+      )
+      OR (
+        p.codigo = 'completo'
+        AND LOWER(TRIM(COALESCE(b.plano, ''))) IN ('completo', 'gold')
+      )
+    SET
+      b.plano_id = COALESCE(p.id, b.plano_id),
+      b.plano_codigo = COALESCE(p.codigo, b.plano_codigo),
+      b.plano = COALESCE(p.nome, b.plano)
+    WHERE b.plano IS NOT NULL
+       OR b.plano_codigo IS NOT NULL
+  `);
+
+  await db.query(`
+    UPDATE cobrancas c
+    LEFT JOIN planos_plataforma p ON
+      p.codigo = c.plano_codigo
+      OR LOWER(TRIM(COALESCE(c.plano, ''))) = LOWER(TRIM(p.nome))
+      OR (
+        p.codigo = 'agenda'
+        AND LOWER(TRIM(COALESCE(c.plano, ''))) IN ('agenda', 'prata')
+      )
+      OR (
+        p.codigo = 'completo'
+        AND LOWER(TRIM(COALESCE(c.plano, ''))) IN ('completo', 'gold')
+      )
+    SET
+      c.plano_id = COALESCE(p.id, c.plano_id),
+      c.plano_codigo = COALESCE(p.codigo, c.plano_codigo),
+      c.plano = COALESCE(p.nome, c.plano)
+    WHERE c.plano IS NOT NULL
+       OR c.plano_codigo IS NOT NULL
+  `);
+}
+
 async function ensureServicosCustomizationColumns() {
   const [columns] = await db.query("SHOW COLUMNS FROM servicos");
   const columnNames = new Set(columns.map((column) => column.Field));
@@ -392,12 +516,14 @@ async function ensureSchema() {
   await ensureBarbeariasCustomizationColumns();
   await ensureServicosCustomizationColumns();
   await ensureMediaColumns();
+  await ensurePlanosPlataformaTable();
   await ensurePlanosAssinaturaTable();
   await ensureClientesAssinaturasTable();
   await ensurePdvVendasTable();
   await ensurePdvVendaItensTable();
   await ensureDespesasTable();
   await ensureCobrancasTable();
+  await ensurePlataformaPlanColumns();
 
   const [produtoColumns] = await db.query("SHOW COLUMNS FROM produtos");
   const produtoColumnNames = new Set(produtoColumns.map((column) => column.Field));

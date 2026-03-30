@@ -1,11 +1,21 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { FiBarChart2, FiBriefcase, FiCreditCard, FiHome, FiSettings } from "react-icons/fi";
+import {
+  FiBarChart2,
+  FiBriefcase,
+  FiCreditCard,
+  FiHome,
+  FiSettings,
+  FiUsers,
+  FiLayers,
+} from "react-icons/fi";
 import { RiAdminLine } from "react-icons/ri";
 import "../../styles/painel.css";
 
 const menuPrincipal = [
   { to: "/master", label: "Painel Master", icon: FiHome, end: true },
   { to: "/master/barbearias", label: "Barbearias", icon: FiBriefcase },
+  { to: "/master/planos", label: "Planos", icon: FiLayers },
+  { to: "/master/usuarios", label: "Usuarios", icon: FiUsers },
   { to: "/master/pagamentos", label: "Pagamentos", icon: FiCreditCard },
 ];
 

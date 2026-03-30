@@ -32,12 +32,19 @@ export function getSessionPlano() {
   return String(getSessionUser()?.plano || "").trim();
 }
 
-export function isPlanoAgenda(plano = getSessionPlano()) {
-  return String(plano || "").trim().toLowerCase() === "agenda";
+export function getSessionPlanoCodigo() {
+  return String(getSessionUser()?.plano_codigo || "").trim();
+}
+
+export function isPlanoAgenda(plano = getSessionPlano(), planoCodigo = getSessionPlanoCodigo()) {
+  const codigo = String(planoCodigo || "").trim().toLowerCase();
+  const nome = String(plano || "").trim().toLowerCase();
+
+  return codigo === "agenda" || nome === "agenda" || nome === "prata";
 }
 
 export function canAccessPainelFeature(feature, plano = getSessionPlano()) {
-  if (!isPlanoAgenda(plano)) {
+  if (!isPlanoAgenda(plano, getSessionPlanoCodigo())) {
     return true;
   }
 
@@ -368,6 +375,77 @@ export async function getMasterBarbearias() {
   return fetchJson(`${API_URL}/master/barbearias`);
 }
 
+export async function getMasterPlanos(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.status) params.set("status", filters.status);
+
+  const query = params.toString();
+  return fetchJson(`${API_URL}/master/planos${query ? `?${query}` : ""}`);
+}
+
+export async function getMasterPlanosPublicos() {
+  return fetchJson(`${API_URL}/master/planos-publicos?status=ativo`);
+}
+
+export async function createMasterPlano(payload) {
+  return fetchJson(`${API_URL}/master/planos`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateMasterPlano(id, payload) {
+  return fetchJson(`${API_URL}/master/planos/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMasterPlano(id) {
+  return fetchJson(`${API_URL}/master/planos/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getMasterUsuarios(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.search) params.set("search", filters.search);
+  if (filters.tipo) params.set("tipo", filters.tipo);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.barbearia_id) params.set("barbearia_id", filters.barbearia_id);
+
+  const query = params.toString();
+  return fetchJson(`${API_URL}/master/usuarios${query ? `?${query}` : ""}`);
+}
+
+export async function createMasterUsuario(payload) {
+  return fetchJson(`${API_URL}/master/usuarios`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateMasterUsuario(id, payload) {
+  return fetchJson(`${API_URL}/master/usuarios/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function updateMasterBarbearia(id, payload) {
   return fetchJson(`${API_URL}/master/barbearias/${id}`, {
     method: "PUT",
@@ -406,6 +484,12 @@ export async function updateMasterCobranca(id, payload) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+  });
+}
+
+export async function createMasterCheckout(id) {
+  return fetchJson(`${API_URL}/master/cobrancas/${id}/checkout`, {
+    method: "POST",
   });
 }
 

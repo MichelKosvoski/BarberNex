@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ServiceCard from "../../components/ServiceCard";
 import { fileToDataUrl } from "../../utils/fileToDataUrl";
 import {
@@ -36,18 +36,22 @@ export default function PainelServicos() {
 
   const barbeariaId = getPainelBarbeariaId();
 
-  async function carregarServicos() {
+  const carregarServicos = useCallback(async () => {
     try {
       const data = await getServicosPainel(barbeariaId);
       setServicos(data);
     } catch (error) {
       setErro(error.message);
     }
-  }
+  }, [barbeariaId]);
 
   useEffect(() => {
-    carregarServicos();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      void carregarServicos();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [carregarServicos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

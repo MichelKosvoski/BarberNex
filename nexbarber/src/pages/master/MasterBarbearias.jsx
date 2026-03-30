@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { getMasterBarbearias, updateMasterBarbearia } from "../../services/api";
+import {
+  getMasterBarbearias,
+  getMasterPlanos,
+  updateMasterBarbearia,
+} from "../../services/api";
 
 const estadosBrasil = [
   "AC",
@@ -31,38 +35,13 @@ const estadosBrasil = [
   "TO",
 ];
 
-const planosSistema = [
-  {
-    value: "",
-    label: "Sem plano",
-    preco: 0,
-    descricao: "Barbearia sem assinatura definida.",
-  },
-  {
-    value: "Agenda",
-    label: "Agenda - R$ 85",
-    preco: 85,
-    descricao: "Somente agenda e operacao basica.",
-  },
-  {
-    value: "Completo",
-    label: "Completo - R$ 120",
-    preco: 120,
-    descricao: "Painel completo com administracao da barbearia.",
-  },
-  {
-    value: "Personalizado",
-    label: "Personalizado",
-    preco: null,
-    descricao: "Plano ajustado manualmente por voce.",
-  },
-];
-
 const initialEdit = {
   id: null,
   nome: "",
   status: "ativo",
   plano: "",
+  plano_id: "",
+  plano_codigo: "",
   status_assinatura: "pendente",
   status_pagamento: "pendente",
   vencimento_assinatura: "",
@@ -74,6 +53,7 @@ const initialEdit = {
 
 export default function MasterBarbearias() {
   const [barbearias, setBarbearias] = useState([]);
+  const [planosSistema, setPlanosSistema] = useState([]);
   const [busca, setBusca] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
   const [filtroAssinatura, setFiltroAssinatura] = useState("");
@@ -85,8 +65,12 @@ export default function MasterBarbearias() {
 
   async function carregar() {
     try {
-      const resposta = await getMasterBarbearias();
-      setBarbearias(Array.isArray(resposta) ? resposta : []);
+      const [respostaBarbearias, respostaPlanos] = await Promise.all([
+        getMasterBarbearias(),
+        getMasterPlanos(),
+      ]);
+      setBarbearias(Array.isArray(respostaBarbearias) ? respostaBarbearias : []);
+      setPlanosSistema(Array.isArray(respostaPlanos) ? respostaPlanos : []);
     } catch (error) {
       setErro(error.message);
     }
@@ -94,6 +78,9 @@ export default function MasterBarbearias() {
 
   useEffect(() => {
     carregar();
+    const intervalId = setInterval(carregar, 12000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const listaFiltrada = useMemo(() => {
@@ -138,9 +125,8 @@ export default function MasterBarbearias() {
 
   const planoSelecionado = useMemo(
     () =>
-      planosSistema.find((item) => item.value === editando.plano) ||
-      planosSistema[0],
-    [editando.plano],
+      planosSistema.find((item) => String(item.id) === String(editando.plano_id)) || null,
+    [editando.plano_id, planosSistema],
   );
 
   const iniciarEdicao = (item) => {
@@ -151,6 +137,8 @@ export default function MasterBarbearias() {
       nome: item.nome || "",
       status: item.status || "ativo",
       plano: item.plano || "",
+      plano_id: item.plano_id ? String(item.plano_id) : "",
+      plano_codigo: item.plano_codigo || "",
       status_assinatura: item.status_assinatura || "pendente",
       status_pagamento: item.status_pagamento || "pendente",
       vencimento_assinatura: item.vencimento_assinatura
@@ -166,14 +154,18 @@ export default function MasterBarbearias() {
   };
 
   const handlePlanoChange = (value) => {
-    const plano = planosSistema.find((item) => item.value === value);
+    const plano = planosSistema.find((item) => String(item.id) === String(value));
 
     setEditando((prev) => ({
       ...prev,
-      plano: value,
+      plano: plano?.nome || "",
+      plano_id: value,
+      plano_codigo: plano?.codigo || "",
       valor_mensalidade:
-        plano && plano.preco !== null
-          ? String(plano.preco)
+        value === ""
+          ? ""
+          : plano
+          ? String(plano.valor_mensal)
           : prev.valor_mensalidade,
     }));
   };
@@ -190,6 +182,8 @@ export default function MasterBarbearias() {
       await updateMasterBarbearia(editando.id, {
         status: editando.status,
         plano: editando.plano,
+        plano_id: editando.plano_id ? Number(editando.plano_id) : null,
+        plano_codigo: editando.plano_codigo || null,
         status_assinatura: editando.status_assinatura,
         status_pagamento: editando.status_pagamento,
         vencimento_assinatura: editando.vencimento_assinatura || null,
@@ -426,20 +420,22 @@ export default function MasterBarbearias() {
               <label className="painel-field">
                 <span>Plano</span>
                 <select
-                  value={editando.plano}
+                  value={editando.plano_id}
                   onChange={(e) => handlePlanoChange(e.target.value)}
                 >
+                  <option value="">Sem plano</option>
                   {planosSistema.map((plano) => (
-                    <option
-                      key={plano.value || "sem-plano"}
-                      value={plano.value}
-                    >
-                      {plano.label}
+                    <option key={plano.id} value={plano.id}>
+                      {plano.nome} -{" "}
+                      {Number(plano.valor_mensal || 0).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
                     </option>
                   ))}
                 </select>
                 <small className="painel-field-help">
-                  {planoSelecionado.descricao}
+                  {planoSelecionado?.descricao || "Barbearia sem assinatura definida."}
                 </small>
               </label>
 

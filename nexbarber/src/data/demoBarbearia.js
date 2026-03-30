@@ -1,0 +1,146 @@
+import Banercard1 from "../assets/Banercard1.png";
+import Barbermodel from "../assets/Barbermodel.png";
+import Degrade from "../assets/Degrade.png";
+import Lowfade from "../assets/Lowfade.png";
+import LogoNexBaberSite from "../assets/LogoNexBaberSite.png";
+
+export const demoBarbearia = {
+  id: "demo",
+  nome: "NexBarber Studio",
+  descricao: "Modelo de demonstração com identidade visual premium.",
+  status: "ativo",
+  cidade: "São Paulo",
+  estado: "SP",
+  telefone: "(11) 99999-9999",
+  horario_funcionamento: "Segunda a sábado, das 09h às 19h",
+  banner: Banercard1,
+  logo: LogoNexBaberSite,
+  texto_hero: "Conheça a vitrine premium da NexBarber",
+  subtitulo_hero: "Uma demonstração pronta para apresentar o sistema com visual profissional.",
+  cor_primaria: "#f5c542",
+  cor_secundaria: "#d7a52b",
+  cor_fundo: "#050607",
+  cor_card: "#11141b",
+  cor_borda: "#2a2f39",
+  cor_texto: "#f3f4f6",
+  cor_texto_secundario: "rgba(255, 255, 255, 0.7)",
+  cor_botao_texto: "#151515",
+  fonte_titulo: "Georgia, 'Times New Roman', serif",
+  fonte_corpo: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  tamanho_titulo: 42,
+  tamanho_texto: 18,
+  tamanho_logo: 86,
+  overlay_cor: "#000000",
+  overlay_opacidade: 72,
+  exibir_planos_publico: 1,
+  titulo_planos_publico: "Planos da barbearia",
+  subtitulo_planos_publico: "Escolha um plano recorrente para manter o visual em dia.",
+};
+
+export const demoServicos = [
+  {
+    id: 1,
+    nome: "Low Fade",
+    duracao: 30,
+    duracao_minutos: 30,
+    preco: 45,
+    imagem: Lowfade,
+    categoria: ["Corte"],
+  },
+  {
+    id: 2,
+    nome: "Degradê Clássico",
+    duracao: 30,
+    duracao_minutos: 30,
+    preco: 45,
+    imagem: Degrade,
+    categoria: ["Corte"],
+  },
+  {
+    id: 3,
+    nome: "Corte + Barba",
+    duracao: 45,
+    duracao_minutos: 45,
+    preco: 75,
+    imagem: Lowfade,
+    categoria: ["Corte", "Barba"],
+  },
+  {
+    id: 4,
+    nome: "Barba Completa",
+    duracao: 25,
+    duracao_minutos: 25,
+    preco: 35,
+    imagem: Lowfade,
+    categoria: ["Barba"],
+  },
+  {
+    id: 5,
+    nome: "Sobrancelha",
+    duracao: 15,
+    duracao_minutos: 15,
+    preco: 20,
+    imagem: Lowfade,
+    categoria: ["Sobrancelha"],
+  },
+  {
+    id: 6,
+    nome: "Platinado Completo",
+    duracao: 150,
+    duracao_minutos: 150,
+    preco: 220,
+    imagem: Lowfade,
+    categoria: ["Coloração"],
+  },
+];
+
+export const demoBarbeiros = [
+  {
+    id: 1,
+    nome: "Lucas Pereira",
+    cargo: "Especialista em fade",
+    especialidade: "Low fade e acabamento",
+    foto: Barbermodel,
+    imagem: Barbermodel,
+    rating: 5,
+  },
+  {
+    id: 2,
+    nome: "Rafael Borges",
+    cargo: "Barbeiro premium",
+    especialidade: "Barba e corte social",
+    foto: Barbermodel,
+    imagem: Barbermodel,
+    rating: 5,
+  },
+  {
+    id: 3,
+    nome: "Adriano Silva",
+    cargo: "Colorista",
+    especialidade: "Platinado e visagismo",
+    foto: Barbermodel,
+    imagem: Barbermodel,
+    rating: 4,
+  },
+];
+
+export const demoPlanos = [
+  {
+    id: 1,
+    nome: "Plano Prata",
+    preco: 60,
+    cortes_inclusos: 0,
+    barbas_inclusas: 0,
+    recorrencia: "mensal",
+    status: "ativo",
+  },
+  {
+    id: 2,
+    nome: "Plano Gold",
+    preco: 120,
+    cortes_inclusos: 2,
+    barbas_inclusas: 1,
+    recorrencia: "mensal",
+    status: "ativo",
+  },
+];

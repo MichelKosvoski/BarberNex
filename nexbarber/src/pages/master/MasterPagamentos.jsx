@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  createMasterCheckout,
   createMasterCobranca,
   deleteMasterCobranca,
   getMasterBarbearias,
   getMasterCobrancas,
+  getMasterPlanos,
   updateMasterCobranca,
 } from "../../services/api";
 
@@ -35,37 +37,12 @@ const metodoOptions = [
   { value: "cartao", label: "Cartao" },
 ];
 
-const planoOptions = [
-  {
-    value: "",
-    label: "Sem plano",
-    valor: "",
-    descricao: "",
-  },
-  {
-    value: "Agenda",
-    label: "Agenda - R$ 85",
-    valor: "85",
-    descricao: "Assinatura Agenda",
-  },
-  {
-    value: "Completo",
-    label: "Completo - R$ 120",
-    valor: "120",
-    descricao: "Assinatura Completo",
-  },
-  {
-    value: "Personalizado",
-    label: "Personalizado",
-    valor: "",
-    descricao: "",
-  },
-];
-
 const emptyForm = {
   barbearia_id: "",
   descricao: "",
   plano: "",
+  plano_id: "",
+  plano_codigo: "",
   referencia: "",
   valor: "",
   status: "pendente",
@@ -84,6 +61,7 @@ function getStatusClass(status) {
 
 export default function MasterPagamentos() {
   const [barbearias, setBarbearias] = useState([]);
+  const [planoOptions, setPlanoOptions] = useState([]);
   const [cobrancas, setCobrancas] = useState([]);
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -98,12 +76,14 @@ export default function MasterPagamentos() {
   async function carregar() {
     try {
       setErro("");
-      const [listaBarbearias, listaCobrancas] = await Promise.all([
+      const [listaBarbearias, listaCobrancas, listaPlanos] = await Promise.all([
         getMasterBarbearias(),
         getMasterCobrancas(filters),
+        getMasterPlanos(),
       ]);
       setBarbearias(listaBarbearias);
       setCobrancas(listaCobrancas);
+      setPlanoOptions(Array.isArray(listaPlanos) ? listaPlanos : []);
     } catch (error) {
       setErro(error.message);
     }
@@ -111,6 +91,9 @@ export default function MasterPagamentos() {
 
   useEffect(() => {
     carregar();
+    const intervalId = setInterval(carregar, 12000);
+
+    return () => clearInterval(intervalId);
   }, [filters.search, filters.status, filters.barbearia_id]);
 
   const resumo = useMemo(() => {
@@ -130,12 +113,14 @@ export default function MasterPagamentos() {
   }, [cobrancas]);
 
   function handlePlanoChange(value) {
-    const planoSelecionado = planoOptions.find((item) => item.value === value);
+    const planoSelecionado = planoOptions.find((item) => String(item.id) === String(value));
 
     setForm((prev) => ({
       ...prev,
-      plano: value,
-      valor: planoSelecionado && planoSelecionado.valor !== "" ? planoSelecionado.valor : prev.valor,
+      plano: planoSelecionado?.nome || "",
+      plano_id: value,
+      plano_codigo: planoSelecionado?.codigo || "",
+      valor: value === "" ? "" : planoSelecionado ? String(planoSelecionado.valor_mensal) : prev.valor,
       descricao: prev.descricao || (planoSelecionado ? planoSelecionado.descricao : ""),
     }));
   }
@@ -151,6 +136,8 @@ export default function MasterPagamentos() {
       barbearia_id: String(item.barbearia_id || ""),
       descricao: item.descricao || "",
       plano: item.plano || "",
+      plano_id: item.plano_id ? String(item.plano_id) : "",
+      plano_codigo: item.plano_codigo || "",
       referencia: item.referencia || "",
       valor: String(item.valor || ""),
       status: item.status || "pendente",
@@ -172,6 +159,7 @@ export default function MasterPagamentos() {
       const payload = {
         ...form,
         barbearia_id: Number(form.barbearia_id),
+        plano_id: form.plano_id ? Number(form.plano_id) : null,
         valor: Number(form.valor || 0),
       };
 
@@ -211,6 +199,16 @@ export default function MasterPagamentos() {
       setErro("");
       await deleteMasterCobranca(id);
       if (editingId === id) resetForm();
+      await carregar();
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
+
+  async function handleGenerateCheckout(item) {
+    try {
+      setErro("");
+      await createMasterCheckout(item.id);
       await carregar();
     } catch (error) {
       setErro(error.message);
@@ -294,12 +292,13 @@ export default function MasterPagamentos() {
             />
 
               <select
-                value={form.plano}
+                value={form.plano_id}
                 onChange={(event) => handlePlanoChange(event.target.value)}
               >
+                <option value="">Sem plano</option>
                 {planoOptions.map((item) => (
-                  <option key={item.value || "sem-plano"} value={item.value}>
-                    {item.label}
+                  <option key={item.id} value={item.id}>
+                    {item.nome} - {formatCurrency(item.valor_mensal)}
                   </option>
                 ))}
               </select>
@@ -473,6 +472,13 @@ export default function MasterPagamentos() {
                       <div className="painel-table-actions">
                         <button type="button" className="painel-table-btn is-ghost" onClick={() => fillForm(item)}>
                           Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="painel-table-btn is-whatsapp"
+                          onClick={() => handleGenerateCheckout(item)}
+                        >
+                          Gerar checkout
                         </button>
                         <button
                           type="button"

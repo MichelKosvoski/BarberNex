@@ -20,6 +20,8 @@ import MasterLayout from "./pages/master/MasterLayout";
 import MasterHome from "./pages/master/MasterHome";
 import MasterBarbearias from "./pages/master/MasterBarbearias";
 import MasterPagamentos from "./pages/master/MasterPagamentos";
+import MasterUsuarios from "./pages/master/MasterUsuarios";
+import MasterPlanos from "./pages/master/MasterPlanos";
 
 function App() {
   return (
@@ -136,6 +138,8 @@ function App() {
         >
           <Route index element={<MasterHome />} />
           <Route path="barbearias" element={<MasterBarbearias />} />
+          <Route path="planos" element={<MasterPlanos />} />
+          <Route path="usuarios" element={<MasterUsuarios />} />
           <Route path="pagamentos" element={<MasterPagamentos />} />
           <Route path="relatorios" element={<Navigate to="/master" replace />} />
           <Route path="configuracoes" element={<Navigate to="/master" replace />} />
