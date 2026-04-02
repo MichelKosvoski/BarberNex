@@ -16,12 +16,15 @@ import {
 
 import ServiceCard from "../../components/ServiceCard";
 import BarberCard from "../../components/BarberCard";
+import LanguageSelector from "../../components/LanguageSelector";
+import { useLocale } from "../../context/LocaleContext";
 import "../../styles/barbearia.css";
 
 export default function ModeloBarbearia() {
+  const { language, locale, formatCurrencyFromBrl, formatDate } = useLocale();
   const { id } = useParams();
   const isDemo = String(id).toLowerCase() === "demo";
-  const hoje = new Date();
+  const hoje = useMemo(() => new Date(), []);
   const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
   const [tab, setTab] = useState("agendamento");
@@ -34,8 +37,8 @@ export default function ModeloBarbearia() {
   const [barbeiroSelecionado, setBarbeiroSelecionado] = useState(null);
   const [buscaBarbeiro, setBuscaBarbeiro] = useState("");
   const [filtroEstrelas, setFiltroEstrelas] = useState(0);
-  const [tipoCliente, setTipoCliente] = useState("Adulto");
-  const [formaPagamento, setFormaPagamento] = useState("Pix");
+  const [tipoCliente, setTipoCliente] = useState("adult");
+  const [formaPagamento, setFormaPagamento] = useState("pix");
   const [observacao, setObservacao] = useState("");
   const [clienteNome, setClienteNome] = useState("");
   const [clienteTelefone, setClienteTelefone] = useState("");
@@ -47,6 +50,69 @@ export default function ModeloBarbearia() {
   const [barbeiros, setBarbeiros] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [planos, setPlanos] = useState([]);
+  const copy =
+    language === "es"
+      ? {
+          loading: "Cargando barberia...",
+          defaultSubtitle: "Tu barberia con identidad propia y reservas online.",
+          open: "Abierto ahora",
+          closed: "Cerrado",
+          cta: "Reservar turno",
+          plansKicker: "Suscripciones de la barberia",
+          plansTitle: "Planes de la barberia",
+          plansSubtitle: "Elige un plan recurrente para mantener el cuidado al dia.",
+          tabs: { agendamento: "Reserva", servicos: "Servicios", barbeiro: "Elige tu barbero" },
+          booking: { kicker: "Reserva", title: "Reserva tu horario en pocos clics", subtitle: "Elige la fecha, selecciona una hora y avanza para montar tu atencion.", continue: "Continuar" },
+          infoFallback: { city: "Ciudad", phone: "Telefono no informado", hours: "Horario no informado" },
+          services: { kicker: "Catalogo", title: "Servicios destacados", subtitle: "Filtra por categoria, compara precios y elige el servicio ideal.", search: "Buscar servicio...", empty: "Ningun servicio encontrado con este filtro." },
+          barbers: { kicker: "Equipo", title: "Elige tu barbero", subtitle: "Compara especialidades, valoraciones y define quien te atendera.", search: "Buscar barbero...", allRatings: "Todas las valoraciones", empty: "Ningun barbero encontrado con este filtro." },
+          summary: { title: "Resumen de la reserva", service: "Servicio", date: "Fecha", time: "Hora", barber: "Barbero", notSelected: "No seleccionado", customerName: "Nombre del cliente", customerPlaceholder: "Escribe tu nombre", phone: "Telefono", customerType: "Tipo de cliente", paymentMethod: "Forma de pago", note: "Observacion", notePlaceholder: "Ej: Dejar mas bajo en los laterales...", total: "Total", confirm: "Confirmar reserva", confirming: "Confirmando...", customerTypes: { adult: "Adulto", child: "Nino" }, paymentMethods: { pix: "Pix", cash: "Efectivo", debit: "Tarjeta debito", credit: "Tarjeta credito" } },
+          messages: { selectTime: "Selecciona un horario para continuar.", complete: "Completa todas las etapas antes de confirmar.", customer: "Informa nombre y telefono para concluir la reserva.", failed: "No fue posible confirmar la reserva." },
+          success: { kicker: "Reserva confirmada", title: "Tu horario fue reservado con exito.", customer: "Cliente", phone: "Telefono", service: "Servicio", barber: "Barbero", date: "Fecha", time: "Hora", close: "Cerrar" },
+          recurrence: { mensal: "mensual", trimestral: "trimestral", semestral: "semestral", anual: "anual" },
+          weekdays: ["D", "L", "M", "X", "J", "V", "S"],
+        }
+      : language === "en"
+        ? {
+            loading: "Loading barbershop...",
+            defaultSubtitle: "Your barbershop with its own identity and online booking.",
+            open: "Open now",
+            closed: "Closed",
+            cta: "Book now",
+            plansKicker: "Barbershop memberships",
+            plansTitle: "Barbershop plans",
+            plansSubtitle: "Choose a recurring plan to keep your routine on track.",
+            tabs: { agendamento: "Booking", servicos: "Services", barbeiro: "Choose your barber" },
+            booking: { kicker: "Booking", title: "Book your slot in just a few clicks", subtitle: "Choose a date, select a time and move forward to build your appointment.", continue: "Continue" },
+            infoFallback: { city: "City", phone: "Phone not provided", hours: "Hours not provided" },
+            services: { kicker: "Catalog", title: "Featured services", subtitle: "Filter by category, compare prices and choose the ideal service.", search: "Search service...", empty: "No service found with this filter." },
+            barbers: { kicker: "Team", title: "Choose your barber", subtitle: "Compare specialties, ratings and decide who will serve you.", search: "Search barber...", allRatings: "All ratings", empty: "No barber found with this filter." },
+            summary: { title: "Booking summary", service: "Service", date: "Date", time: "Time", barber: "Barber", notSelected: "Not selected", customerName: "Customer name", customerPlaceholder: "Type your name", phone: "Phone", customerType: "Customer type", paymentMethod: "Payment method", note: "Note", notePlaceholder: "Example: keep the sides lower...", total: "Total", confirm: "Confirm booking", confirming: "Confirming...", customerTypes: { adult: "Adult", child: "Child" }, paymentMethods: { pix: "Pix", cash: "Cash", debit: "Debit card", credit: "Credit card" } },
+            messages: { selectTime: "Select a time to continue.", complete: "Complete every step before confirming.", customer: "Enter name and phone to finish the booking.", failed: "Could not confirm the booking." },
+            success: { kicker: "Booking confirmed", title: "Your time slot has been reserved successfully.", customer: "Customer", phone: "Phone", service: "Service", barber: "Barber", date: "Date", time: "Time", close: "Close" },
+            recurrence: { mensal: "monthly", trimestral: "quarterly", semestral: "semiannual", anual: "annual" },
+            weekdays: ["S", "M", "T", "W", "T", "F", "S"],
+          }
+        : {
+            loading: "Carregando barbearia...",
+            defaultSubtitle: "Sua barbearia com identidade propria e agendamento online.",
+            open: "Aberto agora",
+            closed: "Fechado",
+            cta: "Agendar horario",
+            plansKicker: "Assinaturas da barbearia",
+            plansTitle: "Planos da barbearia",
+            plansSubtitle: "Escolha um plano recorrente para manter o cuidado em dia.",
+            tabs: { agendamento: "Agendamento", servicos: "Servicos", barbeiro: "Escolha seu barbeiro" },
+            booking: { kicker: "Agendamento", title: "Reserve seu horario com poucos cliques", subtitle: "Escolha a data, selecione um horario e avance para montar seu atendimento.", continue: "Continuar" },
+            infoFallback: { city: "Cidade", phone: "Telefone nao informado", hours: "Horario nao informado" },
+            services: { kicker: "Catalogo", title: "Servicos em destaque", subtitle: "Filtre por categoria, compare os precos e escolha o servico ideal.", search: "Buscar servico...", empty: "Nenhum servico encontrado com esse filtro." },
+            barbers: { kicker: "Equipe", title: "Escolha seu barbeiro", subtitle: "Compare especialidades, avaliacoes e defina quem vai atender voce.", search: "Buscar barbeiro...", allRatings: "Todas avaliacoes", empty: "Nenhum barbeiro encontrado com esse filtro." },
+            summary: { title: "Resumo do agendamento", service: "Servico", date: "Data", time: "Horario", barber: "Barbeiro", notSelected: "Nao selecionado", customerName: "Nome do cliente", customerPlaceholder: "Digite seu nome", phone: "Telefone", customerType: "Tipo de cliente", paymentMethod: "Forma de pagamento", note: "Observacao", notePlaceholder: "Ex: Deixar mais baixo na lateral...", total: "Total", confirm: "Confirmar agendamento", confirming: "Confirmando...", customerTypes: { adult: "Adulto", child: "Crianca" }, paymentMethods: { pix: "Pix", cash: "Dinheiro", debit: "Cartao debito", credit: "Cartao credito" } },
+            messages: { selectTime: "Selecione um horario para continuar.", complete: "Complete todas as etapas antes de confirmar.", customer: "Informe nome e telefone para concluir o agendamento.", failed: "Nao foi possivel confirmar o agendamento." },
+            success: { kicker: "Agendamento confirmado", title: "Seu horario foi reservado com sucesso.", customer: "Cliente", phone: "Telefone", service: "Servico", barber: "Barbeiro", date: "Data", time: "Horario", close: "Fechar" },
+            recurrence: { mensal: "mensal", trimestral: "trimestral", semestral: "semestral", anual: "anual" },
+            weekdays: ["D", "S", "T", "Q", "Q", "S", "S"],
+          };
 
   useEffect(() => {
     async function carregar() {
@@ -78,21 +144,7 @@ export default function ModeloBarbearia() {
 
   const estaAberto = barbearia?.status === "ativo";
 
-  const diasSemana = ["D", "S", "T", "Q", "Q", "S", "S"];
-  const mesesLabel = [
-    "janeiro",
-    "fevereiro",
-    "marco",
-    "abril",
-    "maio",
-    "junho",
-    "julho",
-    "agosto",
-    "setembro",
-    "outubro",
-    "novembro",
-    "dezembro",
-  ];
+  const diasSemana = copy.weekdays;
 
   const calendarioDias = useMemo(() => {
     const primeiroDiaDoMes = new Date(mesAtual.getFullYear(), mesAtual.getMonth(), 1);
@@ -130,9 +182,12 @@ export default function ModeloBarbearia() {
     }
 
     return lista;
-  }, [mesAtual, dataSelecionada]);
+  }, [dataSelecionada, hoje, mesAtual]);
 
-  const tituloMesAtual = `${mesesLabel[mesAtual.getMonth()]} de ${mesAtual.getFullYear()}`;
+  const tituloMesAtual = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+  }).format(mesAtual);
 
   const horarios = [
     "09:00",
@@ -257,7 +312,7 @@ export default function ModeloBarbearia() {
 
   const handleAvancarAgendamento = () => {
     if (!horaSelecionada) {
-      setMensagemErro("Selecione um horario para continuar.");
+      setMensagemErro(copy.messages.selectTime);
       return;
     }
 
@@ -273,12 +328,12 @@ export default function ModeloBarbearia() {
 
   const handleConfirmarAgendamento = async () => {
     if (!servicoSelecionado || !horaSelecionada || !barbeiroSelecionado) {
-      setMensagemErro("Complete todas as etapas antes de confirmar.");
+      setMensagemErro(copy.messages.complete);
       return;
     }
 
     if (!clienteNome.trim() || !clienteTelefone.trim()) {
-      setMensagemErro("Informe nome e telefone para concluir o agendamento.");
+      setMensagemErro(copy.messages.customer);
       return;
     }
 
@@ -298,7 +353,7 @@ export default function ModeloBarbearia() {
             dataSelecionada.getMonth() + 1,
           ).padStart(2, "0")}-${String(dataSelecionada.getDate()).padStart(2, "0")}`,
           hora: horaSelecionada,
-          observacao: `Tipo de cliente: ${tipoCliente} | Pagamento: ${formaPagamento}${
+          observacao: `Tipo de cliente: ${copy.summary.customerTypes[tipoCliente] || tipoCliente} | Pagamento: ${copy.summary.paymentMethods[formaPagamento] || formaPagamento}${
             observacao ? ` | Obs: ${observacao}` : ""
           }`,
         });
@@ -321,10 +376,10 @@ export default function ModeloBarbearia() {
       setObservacao("");
       setClienteNome("");
       setClienteTelefone("");
-      setTipoCliente("Adulto");
-      setFormaPagamento("Pix");
+      setTipoCliente("adult");
+      setFormaPagamento("pix");
     } catch (error) {
-      setMensagemErro(error.message || "Nao foi possivel confirmar o agendamento.");
+      setMensagemErro(error.message || copy.messages.failed);
     } finally {
       setSalvandoAgendamento(false);
     }
@@ -336,7 +391,7 @@ export default function ModeloBarbearia() {
       mesAtual.getMonth() > inicioMesAtual.getMonth());
 
   if (!barbearia) {
-    return <div>Carregando barbearia...</div>;
+    return <div>{copy.loading}</div>;
   }
 
   const visualStyle = {
@@ -386,60 +441,63 @@ export default function ModeloBarbearia() {
               <p className="bb-subtitle">
                 {barbearia?.subtitulo_hero ||
                   barbearia?.descricao ||
-                  "Sua barbearia com identidade propria e agendamento online."}
+                  copy.defaultSubtitle}
               </p>
 
               <div className="bb-meta">
                 <div className="bb-stars">★★★★★</div>
 
                 <span className={`bb-badge ${estaAberto ? "open" : "closed"}`}>
-                  {estaAberto ? "Aberto agora" : "Fechado"}
+                  {estaAberto ? copy.open : copy.closed}
                 </span>
               </div>
             </div>
           </div>
 
-          <button
-            className="bb-cta"
-            onClick={() => handleChangeTab("agendamento")}
-          >
-            Agendar Horario
-          </button>
+          <div className="bb-hero-actions">
+            <LanguageSelector className="bb-language-select" compact />
+            <button
+              className="bb-cta"
+              onClick={() => handleChangeTab("agendamento")}
+            >
+              {copy.cta}
+            </button>
+          </div>
         </div>
       </section>
 
       {planoPublicoVisivel ? (
         <section className="bb-planos-showcase">
           <div className="bb-planos-showcase-copy">
-            <p className="bb-section-kicker">Assinaturas da Barbearia</p>
-            <h2>{barbearia?.titulo_planos_publico || "Planos da barbearia"}</h2>
+            <p className="bb-section-kicker">{copy.plansKicker}</p>
+            <h2>{barbearia?.titulo_planos_publico || copy.plansTitle}</h2>
             <p>
               {barbearia?.subtitulo_planos_publico ||
-                "Escolha um plano recorrente para manter o cuidado em dia."}
+                copy.plansSubtitle}
             </p>
           </div>
 
           <div className="bb-planos-showcase-grid">
             {planosAtivos.slice(0, 3).map((plano) => (
               <article key={plano.id} className="bb-plano-card bb-plano-card-compact">
-                <div className="bb-plano-tag">{plano.recorrencia || "mensal"}</div>
+                <div className="bb-plano-tag">{copy.recurrence[String(plano.recorrencia || "mensal").toLowerCase()] || String(plano.recorrencia || "mensal")}</div>
                 <h3>{plano.nome}</h3>
                 <div className="bb-plano-preco">
-                  <strong>R$ {Number(plano.preco || 0).toFixed(2)}</strong>
-                  <span>/ mes</span>
+                  <strong>{formatCurrencyFromBrl(plano.preco || 0)}</strong>
+                  <span>/ {copy.recurrence[String(plano.recorrencia || "mensal").toLowerCase()] || String(plano.recorrencia || "mensal")}</span>
                 </div>
                 <div className="bb-plano-benefits">
                   <div className="bb-plano-benefit">
                     <span className="bb-dot" />
-                    <span>{plano.cortes_inclusos || 0} cortes inclusos</span>
+                    <span>{plano.cortes_inclusos || 0} {language === "en" ? "included haircuts" : language === "es" ? "cortes incluidos" : "cortes inclusos"}</span>
                   </div>
                   <div className="bb-plano-benefit">
                     <span className="bb-dot" />
-                    <span>{plano.barbas_inclusas || 0} barbas inclusas</span>
+                    <span>{plano.barbas_inclusas || 0} {language === "en" ? "included beard trims" : language === "es" ? "barbas incluidas" : "barbas inclusas"}</span>
                   </div>
                 </div>
                 <button className="bb-plano-btn" type="button">
-                  Quero esse plano
+                  {language === "en" ? "Choose this plan" : language === "es" ? "Quiero este plan" : "Quero esse plano"}
                 </button>
               </article>
             ))}
@@ -452,19 +510,19 @@ export default function ModeloBarbearia() {
           className={`bb-tab ${tab === "agendamento" ? "active" : ""}`}
           onClick={() => handleChangeTab("agendamento")}
         >
-          Agendamento
+          {copy.tabs.agendamento}
         </button>
         <button
           className={`bb-tab ${tab === "servicos" ? "active" : ""}`}
           onClick={() => handleChangeTab("servicos")}
         >
-          Servicos
+          {copy.tabs.servicos}
         </button>
         <button
           className={`bb-tab ${tab === "barbeiro" ? "active" : ""}`}
           onClick={() => handleChangeTab("barbeiro")}
         >
-          Escolha seu Barbeiro
+          {copy.tabs.barbeiro}
         </button>
       </div>
 
@@ -473,25 +531,23 @@ export default function ModeloBarbearia() {
         className={`bb-section ${tab !== "agendamento" ? "bb-section-hidden" : ""}`}
       >
         <div className="bb-section-header">
-          <p className="bb-section-kicker">Agendamento</p>
-          <h2 className="bb-h2">Reserve seu horario com poucos cliques</h2>
-          <p className="bb-section-subtitle">
-            Escolha a data, selecione um horario e avance para montar seu atendimento.
-          </p>
+          <p className="bb-section-kicker">{copy.booking.kicker}</p>
+          <h2 className="bb-h2">{copy.booking.title}</h2>
+          <p className="bb-section-subtitle">{copy.booking.subtitle}</p>
         </div>
 
         <div className="bb-grid2">
           <div className="bb-infoCard">
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {barbearia?.cidade || "Cidade"} -{" "}
+              <span className="bb-dot" /> {barbearia?.cidade || copy.infoFallback.city} -{" "}
               {barbearia?.estado || "--"}
             </div>
             <div className="bb-infoLine">
-              <span className="bb-dot" /> {barbearia?.telefone || "Telefone nao informado"}
+              <span className="bb-dot" /> {barbearia?.telefone || copy.infoFallback.phone}
             </div>
             <div className="bb-infoLine">
               <span className="bb-dot" />{" "}
-              {barbearia?.horario_funcionamento || "Horario nao informado"}
+              {barbearia?.horario_funcionamento || copy.infoFallback.hours}
             </div>
           </div>
 
@@ -575,7 +631,7 @@ export default function ModeloBarbearia() {
 
             <div className="bb-continueRow">
               <button className="bb-continue" onClick={handleAvancarAgendamento}>
-                Continuar
+                {copy.booking.continue}
               </button>
             </div>
           </div>
@@ -587,17 +643,15 @@ export default function ModeloBarbearia() {
         className={`bb-section ${tab !== "servicos" ? "bb-section-hidden" : ""}`}
       >
         <div className="bb-section-header">
-          <p className="bb-section-kicker">Catalogo</p>
-          <h2 className="bb-h2">Servicos em destaque</h2>
-          <p className="bb-section-subtitle">
-            Filtre por categoria, compare os precos e escolha o servico ideal.
-          </p>
+          <p className="bb-section-kicker">{copy.services.kicker}</p>
+          <h2 className="bb-h2">{copy.services.title}</h2>
+          <p className="bb-section-subtitle">{copy.services.subtitle}</p>
         </div>
 
         <div className="bb-filtros">
           <input
             type="text"
-            placeholder="Buscar servico..."
+            placeholder={copy.services.search}
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="bb-input-busca"
@@ -637,7 +691,7 @@ export default function ModeloBarbearia() {
             ))
           ) : (
             <div className="bb-empty-card">
-              Nenhum servico encontrado com esse filtro.
+              {copy.services.empty}
             </div>
           )}
         </div>
@@ -649,16 +703,14 @@ export default function ModeloBarbearia() {
         className={`bb-section ${tab !== "barbeiro" ? "bb-section-hidden" : ""}`}
       >
         <div className="bb-barbeiro-top">
-          <p className="bb-section-kicker">Equipe</p>
-          <h3 className="bb-h3">Escolha seu Barbeiro</h3>
-          <p className="bb-section-subtitle">
-            Compare especialidades, avaliacoes e defina quem vai atender voce.
-          </p>
+          <p className="bb-section-kicker">{copy.barbers.kicker}</p>
+          <h3 className="bb-h3">{copy.barbers.title}</h3>
+          <p className="bb-section-subtitle">{copy.barbers.subtitle}</p>
 
           <div className="bb-barbeiro-filtros">
             <input
               type="text"
-              placeholder="Buscar barbeiro..."
+              placeholder={copy.barbers.search}
               value={buscaBarbeiro}
               onChange={(e) => setBuscaBarbeiro(e.target.value)}
               className="bb-input-busca"
@@ -669,7 +721,7 @@ export default function ModeloBarbearia() {
               onChange={(e) => setFiltroEstrelas(Number(e.target.value))}
               className="bb-select-estrelas"
             >
-              <option value={0}>Todas avaliacoes</option>
+              <option value={0}>{copy.barbers.allRatings}</option>
               <option value={5}>★★★★★</option>
               <option value={4}>★★★★+</option>
               <option value={3}>★★★+</option>
@@ -690,54 +742,54 @@ export default function ModeloBarbearia() {
               ))
             ) : (
               <div className="bb-empty-card">
-                Nenhum barbeiro encontrado com esse filtro.
+              {copy.barbers.empty}
               </div>
             )}
           </div>
 
           <div className="bb-resumo-lateral">
-            <h3 className="bb-resumo-titulo">Resumo do Agendamento</h3>
+            <h3 className="bb-resumo-titulo">{copy.summary.title}</h3>
 
             <div className="bb-resumo-item">
-              <span>Servico</span>
+              <span>{copy.summary.service}</span>
               <strong>
-                {servicoSelecionado ? servicoSelecionado.nome : "Nao selecionado"}
+                {servicoSelecionado ? servicoSelecionado.nome : copy.summary.notSelected}
               </strong>
             </div>
 
             <div className="bb-resumo-item">
-              <span>Data</span>
+              <span>{copy.summary.date}</span>
               <strong>
                 {horaSelecionada
-                  ? `${dataSelecionada.getDate()}/${dataSelecionada.getMonth() + 1}`
-                  : "Nao selecionado"}
+                  ? formatDate(dataSelecionada, { day: "2-digit", month: "2-digit" })
+                  : copy.summary.notSelected}
               </strong>
             </div>
 
             <div className="bb-resumo-item">
-              <span>Horario</span>
-              <strong>{horaSelecionada || "Nao selecionado"}</strong>
+              <span>{copy.summary.time}</span>
+              <strong>{horaSelecionada || copy.summary.notSelected}</strong>
             </div>
 
             <div className="bb-resumo-item">
-              <span>Barbeiro</span>
+              <span>{copy.summary.barber}</span>
               <strong>
-                {barbeiroSelecionado ? barbeiroSelecionado.nome : "Nao selecionado"}
+                {barbeiroSelecionado ? barbeiroSelecionado.nome : copy.summary.notSelected}
               </strong>
             </div>
 
             <div className="bb-campo">
-              <label>Nome do cliente</label>
+              <label>{copy.summary.customerName}</label>
               <input
                 className="bb-select"
                 value={clienteNome}
                 onChange={(e) => setClienteNome(e.target.value)}
-                placeholder="Digite seu nome"
+                placeholder={copy.summary.customerPlaceholder}
               />
             </div>
 
             <div className="bb-campo">
-              <label>Telefone</label>
+              <label>{copy.summary.phone}</label>
               <input
                 className="bb-select"
                 value={clienteTelefone}
@@ -747,46 +799,44 @@ export default function ModeloBarbearia() {
             </div>
 
             <div className="bb-campo">
-              <label>Tipo de cliente</label>
+              <label>{copy.summary.customerType}</label>
               <select
                 className="bb-select"
                 value={tipoCliente}
                 onChange={(e) => setTipoCliente(e.target.value)}
               >
-                <option>Adulto</option>
-                <option>Crianca</option>
+                <option value="adult">{copy.summary.customerTypes.adult}</option>
+                <option value="child">{copy.summary.customerTypes.child}</option>
               </select>
             </div>
 
             <div className="bb-campo">
-              <label>Forma de pagamento</label>
+              <label>{copy.summary.paymentMethod}</label>
               <select
                 className="bb-select"
                 value={formaPagamento}
                 onChange={(e) => setFormaPagamento(e.target.value)}
               >
-                <option>Pix</option>
-                <option>Dinheiro</option>
-                <option>Cartao Debito</option>
-                <option>Cartao Credito</option>
+                <option value="pix">{copy.summary.paymentMethods.pix}</option>
+                <option value="cash">{copy.summary.paymentMethods.cash}</option>
+                <option value="debit">{copy.summary.paymentMethods.debit}</option>
+                <option value="credit">{copy.summary.paymentMethods.credit}</option>
               </select>
             </div>
 
             <div className="bb-campo">
-              <label>Observacao</label>
+              <label>{copy.summary.note}</label>
               <textarea
                 className="bb-textarea"
-                placeholder="Ex: Deixar mais baixo na lateral..."
+                placeholder={copy.summary.notePlaceholder}
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
               />
             </div>
 
             <div className="bb-total">
-              <span>Total</span>
-              <strong>
-                {servicoSelecionado ? `R$ ${servicoSelecionado.preco}` : "R$ 0"}
-              </strong>
+              <span>{copy.summary.total}</span>
+              <strong>{formatCurrencyFromBrl(servicoSelecionado?.preco || 0)}</strong>
             </div>
 
             <button
@@ -794,7 +844,7 @@ export default function ModeloBarbearia() {
               disabled={!servicoSelecionado || !horaSelecionada || !barbeiroSelecionado}
               onClick={handleConfirmarAgendamento}
             >
-              {salvandoAgendamento ? "Confirmando..." : "Confirmar Agendamento"}
+              {salvandoAgendamento ? copy.summary.confirming : copy.summary.confirm}
             </button>
           </div>
         </div>
@@ -805,21 +855,21 @@ export default function ModeloBarbearia() {
       {agendamentoSucesso ? (
         <div className="bb-modal-overlay" onClick={() => setAgendamentoSucesso(null)}>
           <div className="bb-modal" onClick={(e) => e.stopPropagation()}>
-            <p className="bb-section-kicker">Agendamento confirmado</p>
-            <h3 className="bb-h3">Seu horario foi reservado com sucesso.</h3>
+            <p className="bb-section-kicker">{copy.success.kicker}</p>
+            <h3 className="bb-h3">{copy.success.title}</h3>
 
             <div className="bb-modal-summary">
-              <div className="bb-modal-row"><span>Cliente</span><strong>{agendamentoSucesso.cliente}</strong></div>
-              <div className="bb-modal-row"><span>Telefone</span><strong>{agendamentoSucesso.telefone}</strong></div>
-              <div className="bb-modal-row"><span>Servico</span><strong>{agendamentoSucesso.servico}</strong></div>
-              <div className="bb-modal-row"><span>Barbeiro</span><strong>{agendamentoSucesso.barbeiro}</strong></div>
-              <div className="bb-modal-row"><span>Data</span><strong>{agendamentoSucesso.data}</strong></div>
-              <div className="bb-modal-row"><span>Horario</span><strong>{agendamentoSucesso.hora}</strong></div>
+              <div className="bb-modal-row"><span>{copy.success.customer}</span><strong>{agendamentoSucesso.cliente}</strong></div>
+              <div className="bb-modal-row"><span>{copy.success.phone}</span><strong>{agendamentoSucesso.telefone}</strong></div>
+              <div className="bb-modal-row"><span>{copy.success.service}</span><strong>{agendamentoSucesso.servico}</strong></div>
+              <div className="bb-modal-row"><span>{copy.success.barber}</span><strong>{agendamentoSucesso.barbeiro}</strong></div>
+              <div className="bb-modal-row"><span>{copy.success.date}</span><strong>{agendamentoSucesso.data}</strong></div>
+              <div className="bb-modal-row"><span>{copy.success.time}</span><strong>{agendamentoSucesso.hora}</strong></div>
             </div>
 
             <div className="bb-modal-actions">
               <button type="button" className="bb-btn-confirmar" onClick={() => setAgendamentoSucesso(null)}>
-                Fechar
+                {copy.success.close}
               </button>
             </div>
           </div>

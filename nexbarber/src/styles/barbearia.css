@@ -68,6 +68,17 @@
   gap: 18px;
 }
 
+.bb-hero-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.bb-language-select {
+  align-self: flex-end;
+}
+
 .bb-brand {
   display: flex;
   align-items: flex-start;
@@ -124,8 +135,13 @@
   }
 
   .bb-hero-content {
+      align-items: flex-start;
+      justify-content: flex-end;
+    }
+
+  .bb-hero-actions {
+    width: 100%;
     align-items: flex-start;
-    justify-content: flex-end;
   }
 }
 

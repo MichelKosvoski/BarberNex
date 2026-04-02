@@ -86,7 +86,7 @@ export default function Register() {
 
   const openWhatsApp = () => {
     const message = encodeURIComponent(
-      "Olá, quero cadastrar minha barbearia na NexBarber.",
+      "Olá, quero cadastrar minha barbearia na NexCut.",
     );
     window.open(`https://wa.me/5567993487826?text=${message}`, "_blank");
   };
@@ -198,3 +198,6 @@ export default function Register() {
     </div>
   );
 }
+
+
+

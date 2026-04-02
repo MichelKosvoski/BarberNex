@@ -1,5 +1,6 @@
 import "../styles/BarberCard.css";
 import BarberModel from "../assets/Barbermodel.png";
+import { useLocale } from "../context/LocaleContext";
 
 function resolveBarberPhoto(photo) {
   if (!photo) return BarberModel;
@@ -10,16 +11,22 @@ function resolveBarberPhoto(photo) {
 }
 
 export default function BarberCard({ barbeiro, selected, onSelect }) {
+  const { language } = useLocale();
   if (!barbeiro) return null;
-
   const rating = barbeiro.rating ?? 5;
+  const copy =
+    language === "es"
+      ? { specialist: "Especialista", select: "Seleccionar", selected: "Seleccionado", imageAlt: "Barbero" }
+      : language === "en"
+        ? { specialist: "Specialist", select: "Select", selected: "Selected", imageAlt: "Barber" }
+        : { specialist: "Especialista", select: "Selecionar", selected: "Selecionado", imageAlt: "Barbeiro" };
 
   return (
     <div className={`bb-barber-card ${selected ? "is-selected" : ""}`}>
       <div className="bb-barber-img-wrapper">
         <img
           src={resolveBarberPhoto(barbeiro.foto)}
-          alt="Barbeiro"
+          alt={copy.imageAlt}
           className="bb-barber-img"
         />
 
@@ -27,7 +34,7 @@ export default function BarberCard({ barbeiro, selected, onSelect }) {
 
         <div className="bb-barber-name-top">
           <h3>{barbeiro.nome}</h3>
-          <span>{barbeiro.especialidade || "Especialista"}</span>
+          <span>{barbeiro.especialidade || copy.specialist}</span>
 
           <div className="bb-stars-row">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -44,7 +51,7 @@ export default function BarberCard({ barbeiro, selected, onSelect }) {
 
       <div className="bb-barber-footer">
         <button className="bb-barber-btn" onClick={onSelect}>
-          {selected ? "Selecionado" : "Selecionar"}
+          {selected ? copy.selected : copy.select}
         </button>
       </div>
     </div>

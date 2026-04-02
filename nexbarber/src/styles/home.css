@@ -27,8 +27,9 @@
 
 .landing-brand img {
   display: block;
-  width: 150px;
+  width: 88px;
   height: auto;
+  object-fit: contain;
 }
 
 .landing-nav {
@@ -58,6 +59,10 @@
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.landing-language-select {
+  flex: 0 0 auto;
 }
 
 .landing-primary-btn,

@@ -24,7 +24,7 @@ export function getPainelBarbeariaId() {
 }
 
 export function getSessionUser() {
-  const raw = localStorage.getItem("nexbarber_user");
+  const raw = localStorage.getItem("NexCut_user");
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -52,14 +52,14 @@ export function canAccessPainelFeature(feature, plano = getSessionPlano()) {
 }
 
 export function setSessionUser(user) {
-  localStorage.setItem("nexbarber_user", JSON.stringify(user));
+  localStorage.setItem("NexCut_user", JSON.stringify(user));
   if (user?.barbearia_id) {
     localStorage.setItem("barbeariaId", String(user.barbearia_id));
   }
 }
 
 export function clearSessionUser() {
-  localStorage.removeItem("nexbarber_user");
+  localStorage.removeItem("NexCut_user");
 }
 
 /*
@@ -498,3 +498,4 @@ export async function deleteMasterCobranca(id) {
     method: "DELETE",
   });
 }
+

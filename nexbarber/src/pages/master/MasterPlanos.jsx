@@ -136,7 +136,7 @@ export default function MasterPlanos() {
         <div>
           <p className="painel-eyebrow">Planos da plataforma</p>
           <h3>
-            Cadastre, altere e remova os planos comerciais do NexBarber em um
+            Cadastre, altere e remova os planos comerciais do NexCut em um
             lugar so. A landing e o master passam a ler dessa mesma base.
           </h3>
         </div>
@@ -404,3 +404,4 @@ export default function MasterPlanos() {
     </section>
   );
 }
+

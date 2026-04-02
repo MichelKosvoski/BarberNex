@@ -2,11 +2,11 @@ import Banercard1 from "../assets/Banercard1.png";
 import Barbermodel from "../assets/Barbermodel.png";
 import Degrade from "../assets/Degrade.png";
 import Lowfade from "../assets/Lowfade.png";
-import LogoNexBaberSite from "../assets/LogoNexBaberSite.png";
+import LogoNexBaberSite from "../assets/Logo.png";
 
 export const demoBarbearia = {
   id: "demo",
-  nome: "NexBarber Studio",
+  nome: "NexCut Studio",
   descricao: "Modelo de demonstração com identidade visual premium.",
   status: "ativo",
   cidade: "São Paulo",
@@ -15,7 +15,7 @@ export const demoBarbearia = {
   horario_funcionamento: "Segunda a sábado, das 09h às 19h",
   banner: Banercard1,
   logo: LogoNexBaberSite,
-  texto_hero: "Conheça a vitrine premium da NexBarber",
+  texto_hero: "Conheça a vitrine premium da NexCut",
   subtitulo_hero: "Uma demonstração pronta para apresentar o sistema com visual profissional.",
   cor_primaria: "#f5c542",
   cor_secundaria: "#d7a52b",
@@ -144,3 +144,6 @@ export const demoPlanos = [
     status: "ativo",
   },
 ];
+
+
+

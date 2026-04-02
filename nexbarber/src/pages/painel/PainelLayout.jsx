@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   FiBarChart2,
@@ -23,31 +23,80 @@ import {
   getPainelBarbeariaId,
   getSessionUser,
 } from "../../services/api";
+import LanguageSelector from "../../components/LanguageSelector";
+import { useLocale } from "../../context/LocaleContext";
 import "../../styles/painel.css";
 
-const menuPrincipal = [
-  { to: "/painel", label: "Painel", icon: FiHome, end: true, feature: "painel" },
-  { to: "/painel/agenda", label: "Agenda", icon: FiCalendar, feature: "agenda" },
-  { to: "/painel/clientes", label: "Clientes", icon: FiUsers, feature: "clientes" },
-  { to: "/painel/barbeiros", label: "Barbeiros", icon: FiScissors, feature: "barbeiros" },
-  { to: "/painel/servicos", label: "Servicos", icon: FiShoppingBag, feature: "servicos" },
-  { to: "/painel/produtos", label: "Produtos", icon: FiPackage, feature: "produtos" },
-  { to: "/painel/relatorios", label: "Relatorios", icon: FiBarChart2, feature: "relatorios" },
-  { to: "/painel/assinaturas", label: "Assinaturas", icon: FiRepeat, feature: "assinaturas" },
-  { to: "/painel/pdv", label: "PDV", icon: FiCreditCard, feature: "pdv" },
-  { to: "/painel/personalizar", label: "Personalizar Site", icon: FiImage, feature: "personalizar" },
-];
-
-const menuSecundario = [
-  { to: "/painel/configuracoes", label: "Configuracoes", icon: FiSettings, feature: "configuracoes" },
-];
-
 export default function PainelLayout() {
+  const { language, locale } = useLocale();
   const [barbearia, setBarbearia] = useState(null);
   const [notificacoes, setNotificacoes] = useState([]);
   const [painelNotificacoesAberto, setPainelNotificacoesAberto] = useState(false);
   const ultimaLeituraRef = useRef(new Set());
   const user = getSessionUser();
+  const copy =
+    language === "es"
+      ? {
+          brandTitle: "Panel",
+          kicker: "Barberia activa",
+          loadingShop: "Cargando barberia",
+          newBooking: "Nueva reserva",
+          nextAppointment: "Atencion proxima",
+          menuPrincipal: [
+            { to: "/painel", label: "Panel", icon: FiHome, end: true, feature: "painel" },
+            { to: "/painel/agenda", label: "Agenda", icon: FiCalendar, feature: "agenda" },
+            { to: "/painel/clientes", label: "Clientes", icon: FiUsers, feature: "clientes" },
+            { to: "/painel/barbeiros", label: "Barberos", icon: FiScissors, feature: "barbeiros" },
+            { to: "/painel/servicos", label: "Servicios", icon: FiShoppingBag, feature: "servicos" },
+            { to: "/painel/produtos", label: "Productos", icon: FiPackage, feature: "produtos" },
+            { to: "/painel/relatorios", label: "Informes", icon: FiBarChart2, feature: "relatorios" },
+            { to: "/painel/assinaturas", label: "Suscripciones", icon: FiRepeat, feature: "assinaturas" },
+            { to: "/painel/pdv", label: "Punto de venta", icon: FiCreditCard, feature: "pdv" },
+            { to: "/painel/personalizar", label: "Personalizar sitio", icon: FiImage, feature: "personalizar" },
+          ],
+          menuSecundario: [{ to: "/painel/configuracoes", label: "Configuraciones", icon: FiSettings, feature: "configuracoes" }],
+        }
+      : language === "en"
+        ? {
+            brandTitle: "Panel",
+            kicker: "Active barbershop",
+            loadingShop: "Loading barbershop",
+            newBooking: "New booking",
+            nextAppointment: "Upcoming appointment",
+            menuPrincipal: [
+              { to: "/painel", label: "Dashboard", icon: FiHome, end: true, feature: "painel" },
+              { to: "/painel/agenda", label: "Booking", icon: FiCalendar, feature: "agenda" },
+              { to: "/painel/clientes", label: "Clients", icon: FiUsers, feature: "clientes" },
+              { to: "/painel/barbeiros", label: "Barbers", icon: FiScissors, feature: "barbeiros" },
+              { to: "/painel/servicos", label: "Services", icon: FiShoppingBag, feature: "servicos" },
+              { to: "/painel/produtos", label: "Products", icon: FiPackage, feature: "produtos" },
+              { to: "/painel/relatorios", label: "Reports", icon: FiBarChart2, feature: "relatorios" },
+              { to: "/painel/assinaturas", label: "Memberships", icon: FiRepeat, feature: "assinaturas" },
+              { to: "/painel/pdv", label: "POS", icon: FiCreditCard, feature: "pdv" },
+              { to: "/painel/personalizar", label: "Customize site", icon: FiImage, feature: "personalizar" },
+            ],
+            menuSecundario: [{ to: "/painel/configuracoes", label: "Settings", icon: FiSettings, feature: "configuracoes" }],
+          }
+        : {
+            brandTitle: "Painel",
+            kicker: "Barbearia ativa",
+            loadingShop: "Carregando barbearia",
+            newBooking: "Novo agendamento",
+            nextAppointment: "Atendimento proximo",
+            menuPrincipal: [
+              { to: "/painel", label: "Painel", icon: FiHome, end: true, feature: "painel" },
+              { to: "/painel/agenda", label: "Agenda", icon: FiCalendar, feature: "agenda" },
+              { to: "/painel/clientes", label: "Clientes", icon: FiUsers, feature: "clientes" },
+              { to: "/painel/barbeiros", label: "Barbeiros", icon: FiScissors, feature: "barbeiros" },
+              { to: "/painel/servicos", label: "Servicos", icon: FiShoppingBag, feature: "servicos" },
+              { to: "/painel/produtos", label: "Produtos", icon: FiPackage, feature: "produtos" },
+              { to: "/painel/relatorios", label: "Relatorios", icon: FiBarChart2, feature: "relatorios" },
+              { to: "/painel/assinaturas", label: "Assinaturas", icon: FiRepeat, feature: "assinaturas" },
+              { to: "/painel/pdv", label: "PDV", icon: FiCreditCard, feature: "pdv" },
+              { to: "/painel/personalizar", label: "Personalizar site", icon: FiImage, feature: "personalizar" },
+            ],
+            menuSecundario: [{ to: "/painel/configuracoes", label: "Configuracoes", icon: FiSettings, feature: "configuracoes" }],
+          };
 
   function tocarAlerta() {
     try {
@@ -75,13 +124,13 @@ export default function PainelLayout() {
     return String(hora || "").slice(0, 5);
   }
 
-  function formatarData(data) {
+  const formatarData = useCallback((data) => {
     if (!data) return "--";
     const value = new Date(data);
     return Number.isNaN(value.getTime())
       ? String(data)
-      : value.toLocaleDateString("pt-BR");
-  }
+      : value.toLocaleDateString(locale);
+  }, [locale]);
 
   useEffect(() => {
     const barbeariaId = getPainelBarbeariaId();
@@ -96,7 +145,7 @@ export default function PainelLayout() {
     }
 
     carregarBarbearia();
-  }, []);
+  }, [copy.newBooking, copy.nextAppointment, formatarData]);
 
   useEffect(() => {
     const barbeariaId = getPainelBarbeariaId();
@@ -115,7 +164,7 @@ export default function PainelLayout() {
             itens.push({
               id: `novo-${item.id}`,
               tipo: "novo",
-              titulo: "Novo agendamento",
+              titulo: copy.newBooking,
               descricao: `${item.cliente_nome} marcou ${item.servico_nome} com ${item.barbeiro_nome}.`,
               horario: `${formatarData(item.data)} as ${formatarHora(item.hora)}`,
             });
@@ -135,7 +184,7 @@ export default function PainelLayout() {
             itens.push({
               id: `proximo-${item.id}`,
               tipo: "proximo",
-              titulo: "Atendimento proximo",
+              titulo: copy.nextAppointment,
               descricao: `${item.cliente_nome} com ${item.barbeiro_nome}.`,
               horario: `Faltam ${minutos} min`,
             });
@@ -171,17 +220,17 @@ export default function PainelLayout() {
     const interval = window.setInterval(carregarAlertas, 30000);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [copy.newBooking, copy.nextAppointment, formatarData]);
 
   const totalNotificacoes = notificacoes.length;
   const notificacoesExibidas = useMemo(() => notificacoes.slice(0, 6), [notificacoes]);
   const menuPrincipalFiltrado = useMemo(
-    () => menuPrincipal.filter((item) => canAccessPainelFeature(item.feature, user?.plano)),
-    [user?.plano],
+    () => copy.menuPrincipal.filter((item) => canAccessPainelFeature(item.feature, user?.plano)),
+    [copy.menuPrincipal, user?.plano],
   );
   const menuSecundarioFiltrado = useMemo(
-    () => menuSecundario.filter((item) => canAccessPainelFeature(item.feature, user?.plano)),
-    [user?.plano],
+    () => copy.menuSecundario.filter((item) => canAccessPainelFeature(item.feature, user?.plano)),
+    [copy.menuSecundario, user?.plano],
   );
 
   return (
@@ -194,8 +243,8 @@ export default function PainelLayout() {
             </div>
 
             <div>
-              <p className="painel-brand-eyebrow">NexBarber</p>
-              <h1>Painel</h1>
+              <p className="painel-brand-eyebrow">NexCut</p>
+              <h1>{copy.brandTitle}</h1>
             </div>
           </div>
 
@@ -243,11 +292,12 @@ export default function PainelLayout() {
       <main className="painel-main">
         <header className="painel-topbar">
           <div>
-            <p className="painel-topbar-kicker">Barbearia ativa</p>
-            <h2>{barbearia?.nome || "Carregando barbearia"}</h2>
+            <p className="painel-topbar-kicker">{copy.kicker}</p>
+            <h2>{barbearia?.nome || copy.loadingShop}</h2>
           </div>
 
           <div className="painel-topbar-actions">
+            <LanguageSelector className="painel-language-select" compact />
             <button className="painel-icon-button" type="button">
               <FiClock />
             </button>
@@ -309,3 +359,4 @@ export default function PainelLayout() {
     </div>
   );
 }
+
